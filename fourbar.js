@@ -1,4 +1,4 @@
-var createFourBar = function (a, b, c, d, e) {
+var createFourBar = function (a, b, c, d, e, theta5) {
     var that = {};
     
     var SafeMath = {
@@ -50,10 +50,10 @@ var createFourBar = function (a, b, c, d, e) {
         var alpha = SafeMath.acos((b*b + c*c - f*f)/(2*b*c)),
             theta3 = theta4 - alpha;
             
-        that.x3 = d + c * SafeMath.cos(theta4),
-        that.y3 = c * SafeMath.sin(theta4),
-        that.x5 = that.x2 + (b + e)*SafeMath.cos(theta3),
-        that.y5 = that.y2 + (b + e)*SafeMath.sin(theta3);
+        that.x3 = d + c * SafeMath.cos(theta4);
+        that.y3 = c * SafeMath.sin(theta4);
+        that.x5 = that.x3 + e * Math.cos(theta5 + theta3);
+        that.y5 = that.y3 + e * Math.sin(theta5 + theta3);
     };
     
     return that;

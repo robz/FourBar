@@ -5,6 +5,7 @@ body {
 }
 </style>
 <h1>Four-bar simulator</h1>
+click and drag gray area<br/><br/>
 <div id="container"></div>
 <script src="../Plot.js/plot.js"></script>
 <script src="fourbar.js"></script>
@@ -16,10 +17,10 @@ body {
             container: "container",
             pixelWidth: 500,
             pixelHeight: 400,
-            minX: -4,
-            maxX: 5*4-4,
-            minY: -4,
-            maxY: 4*4-4,
+            minX: -8,
+            maxX: 5*4-8,
+            minY: -8,
+            maxY: 4*3-4,
             pointRadius: 0.2,
             lineWidth: 0.1,
             drawColor: "blue",
@@ -30,9 +31,10 @@ body {
         maxCount = 200,
         speed = 2,
         
-        dRadius = 1,
+        blockHeight = 1,
+        blockWidth = 1.5,
         
-        fb = createFourBar(3, 7, 4, 6, 4);
+        fb = createFourBar(1, 4, 3, 3, 6, Math.PI+Math.PI/6);
     
     plot.drawPoint(0, 0);
     plot.storeBackground();
@@ -57,7 +59,9 @@ body {
     
     plot.setMouseDown(function (x, y) {
         var dist = Math.sqrt((x - fb.d) * (x - fb.d) + (y - 0) * (y - 0));
-        if (dist < dRadius) {
+        if (x > fb.d - blockWidth/2 && x < fb.d + blockWidth/2 && 
+            y > -blockHeight/2 && y < blockWidth/2) 
+        {
             mousePressed = true;
             pressStartX = x;
         }
@@ -92,19 +96,22 @@ body {
     var drawFourBar = function () {
         plot.restoreToBackground();
         
-        plot.drawPoint(fb.d, 0, {pointRadius:dRadius, drawColor:"gray"});
+        plot.drawRect(fb.d - blockWidth/2, -blockHeight/2, blockWidth, blockHeight, 
+            {drawColor:"gray"});
         plot.drawPoint(fb.d, 0);
         plot.drawLine(0, 0, fb.d, 0);
         
-        plot.drawPoint(fb.x2, fb.y2);
+        plot.drawPoint(fb.x2, fb.y2, {drawColor:"green"});
         plot.drawLine(0, 0, fb.x2, fb.y2);
         
-        plot.drawPoint(fb.x3, fb.y3);
-        plot.drawLine(fb.x2, fb.y2, fb.x3, fb.y3);
+        plot.drawPoint(fb.x3, fb.y3, {drawColor:"green"});
+        plot.drawLine(fb.x2, fb.y2, fb.x3, fb.y3, {drawColor:"green"});
         plot.drawLine(fb.x3, fb.y3, fb.d, 0);
         
-        plot.drawPoint(fb.x5, fb.y5);
-        plot.drawLine(fb.x2, fb.y2, fb.x5, fb.y5);
+        plot.drawPoint(fb.x5, fb.y5, {drawColor:"green"});
+        plot.drawLine(fb.x3, fb.y3, fb.x5, fb.y5, {drawColor:"green"});
+        
+        plot.drawLine(fb.x2, fb.y2, fb.x5, fb.y5, {drawColor:"green"});
     };
 
     setInterval(function () {
