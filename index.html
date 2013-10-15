@@ -1,0 +1,176 @@
+<html>
+<style>
+body {
+    text-align: center;
+}
+</style>
+<h1>Four-bar simulator</h1>
+<div id="container"></div>
+<script src="../Plot.js/plot.js"></script>
+<script>
+(function () {
+    "use strict";
+    
+    var SafeMath = {
+        acos : function (x) {
+            if (x > 1 || x < -1) { throw "acos(" + x + ")"; }
+            return Math.acos(x);
+        },
+        
+        sqrt : function (x) {
+            if (x < 0) { throw "sqrt(" + x + ")"; }
+            return Math.sqrt(x);
+        },
+        
+        cos : function (x) {
+            if (x < 0 || x > Math.PI*2) { throw "cos(" + x + ")"; }
+            return Math.cos(x);
+        },
+        
+        sin : function (x) {
+            if (x < 0 || x > Math.PI*2) { throw "sin(" + x + ")"; }
+            return Math.sin(x);
+        },
+    };
+
+    var plot = new Plot({
+            container: "container",
+            pixelWidth: 500,
+            pixelHeight: 400,
+            minX: -4,
+            maxX: 5*4-4,
+            minY: -4,
+            maxY: 4*4-4,
+            pointRadius: 0.2,
+            lineWidth: 0.1,
+            drawColor: "blue",
+            backgroundColor: "lightGray"
+        }),
+        
+        count = 0,
+        maxCount = 100,
+        speed = 2,
+        
+        a = 2, 
+        b = 7, 
+        c = 6, 
+        d = 6, 
+        e = 4,
+        
+        dRadius = 1;
+    
+    plot.drawPoint(0, 0);
+    plot.storeBackground();
+    
+    var mousePressed = false,
+        pressStartX = null;
+    
+    plot.setMouseDown(function (x, y) {
+        var dist = Math.sqrt((x - d) * (x - d) + (y - 0) * (y - 0));
+        if (dist < dRadius) {
+            mousePressed = true;
+            pressStartX = x;
+        }
+    });
+    
+    plot.setMouseUp(function (x, y) {
+        if (mousePressed) {
+            var deltaX = x - pressStartX;
+            d += deltaX;
+            try {
+                setPath();
+            } catch (e) {
+                d -= deltaX;
+            }
+        }
+        mousePressed = false;
+    });
+    
+    plot.setMouseMove(function (x, y) {
+        if (mousePressed) {
+            var deltaX = x - pressStartX;
+            d += deltaX;
+            try {
+                setPath();
+                pressStartX = x;
+            } catch (e) {
+                d -= deltaX;
+            }
+        }
+    });
+    
+    var calcPositions = function (theta2) {
+        var x2 = a * SafeMath.cos(theta2),
+            y2 = a * SafeMath.sin(theta2),
+            
+            f = SafeMath.sqrt(a*a + d*d - 2 * a*d*SafeMath.cos(theta2)),
+            phi = SafeMath.acos((f*f + d*d - a*a)/(2*f*d)),
+            gamma = SafeMath.acos((f*f + c*c - b*b)/(2*f*c));
+        
+        if (theta2 < Math.PI) {
+            var theta4 = Math.PI - (gamma + phi);
+        } else {
+            var theta4 = Math.PI - (gamma - phi);
+        }
+        
+        var alpha = SafeMath.acos((b*b + c*c - f*f)/(2*b*c)),
+            theta3 = theta4 - alpha;
+            
+        var x3 = d + c * SafeMath.cos(theta4),
+            y3 = c * SafeMath.sin(theta4),
+            x5 = x2 + (b + e)*SafeMath.cos(theta3),
+            y5 = y2 + (b + e)*SafeMath.sin(theta3);
+            
+        return {
+            x2:x2,
+            y2:y2,
+            x3:x3,
+            y3:y3,
+            x5:x5,
+            y5:y5
+        };
+    }
+        
+    var setPath = function () {
+        var points = [];
+        
+        for (var i = 0; i < maxCount+1; i++) {
+            var theta2 = i * Math.PI * 2 / maxCount;
+            var p = calcPositions(theta2);
+            points.push([p.x5, p.y5]);
+        }
+
+        plot.clear();
+        plot.drawPoint(0, 0);
+        plot.drawPath(points, {drawColor:"red"});
+        plot.storeBackground();
+    };
+    
+    setPath();
+
+    setInterval(function () {
+        var theta2 = count * Math.PI * 2 / maxCount;
+        
+        var p = calcPositions(theta2);
+            
+        plot.restoreToBackground();
+        
+        plot.drawPoint(d, 0, {pointRadius:dRadius, drawColor:"gray"});
+        plot.drawPoint(d, 0);
+        plot.drawLine(0, 0, d, 0);
+        
+        plot.drawPoint(p.x2, p.y2);
+        plot.drawLine(0, 0, p.x2, p.y2);
+        
+        plot.drawPoint(p.x3, p.y3);
+        plot.drawLine(p.x2, p.y2, p.x3, p.y3);
+        plot.drawLine(p.x3, p.y3, d, 0);
+        
+        plot.drawPoint(p.x5, p.y5);
+        plot.drawLine(p.x2, p.y2, p.x5, p.y5);
+
+        count = (count + speed) % maxCount;
+    }, 30);
+}());
+</script>
+</html>
