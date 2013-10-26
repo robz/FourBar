@@ -60,6 +60,20 @@ var createFourBar = function (a, b, c, d, e, theta2, theta5) {
         that.theta2 = (spec && spec.theta2) || that.theta2; 
         that.theta5 = (spec && spec.theta5) || that.theta5; 
     };
+    
+    that.copyElements = function () {
+        return {a:that.a, b:that.b, c:that.c, d:that.d, e:that.e, theta5:that.theta5}; 
+    };
+    
+    var stack = [];
+    
+    that.save = function () {
+        stack.push({a:that.a, b:that.b, c:that.c, d:that.d, e:that.e, theta5:that.theta5});
+    };
+    
+    that.restore = function () {
+        that.setElements(stack.pop());
+    };
 
     that.calcPositions = function (theta2) {
         var a = that.a,
