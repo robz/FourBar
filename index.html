@@ -3,12 +3,27 @@
 body {
     text-align: center;
 }
+
+.configinput {
+    width: 30px;
+}
+
+canvas {
+    margin: 1px 0px 0px 0px;
+    padding: 0px 0px 0px 0px;
+}
 </style>
-<h1>Four-bar simulator</h1>
-click and drag gray area<br/><br/>
+<h3>Four-bar simulator</h3>
+click and drag gray area<br/>
 <div id="container"></div>
+<div id="a_input"></div>
+<div id="b_input"></div>
+<div id="c_input"></div>
+<div id="e_input"></div>
+<div id="theta5_input"></div>
 <script src="../Plot.js/plot.js"></script>
 <script src="fourbar.js"></script>
+<script src="scrollbar.js"></script>
 <script>
 (function () {
     "use strict";
@@ -18,26 +33,65 @@ click and drag gray area<br/><br/>
             pixelWidth: 500,
             pixelHeight: 400,
             minX: -8,
-            maxX: 5*4-8,
+            maxX: 12,
             minY: -8,
-            maxY: 4*3-4,
+            maxY: 8,
             pointRadius: 0.2,
             lineWidth: 0.1,
             drawColor: "blue",
             backgroundColor: "lightGray"
         }),
         
+        DT = 30,
+        
         count = 0,
         maxCount = 200,
         speed = 2,
         
+        omega2 = (Math.PI*2)/((maxCount/speed)*DT),
+        
         blockHeight = 1,
         blockWidth = 1.5,
         
-        fb = createFourBar(1, 4, 3, 3, 6, Math.PI+Math.PI/6);
+        a = 1,
+        b = 4,
+        c = 3,
+        d = 3,
+        e = 6,
+        theta5 = Math.PI + Math.PI / 6,
+        
+        fb = createFourBar(a, b, c, d, e, 0, theta5);
     
     plot.drawPoint(0, 0);
     plot.storeBackground();
+    
+    [{name:"a_input", field: "a", min: 0, max: 10, start: a},
+     {name:"b_input", field: "b", min: 0, max: 10, start: b}, 
+     {name:"c_input", field: "c", min: 0, max: 10, start: c}, 
+     {name:"e_input", field: "e", min: 0, max: 10, start: e},
+     {name:"theta5_input", field: "theta5", min: 0, max: Math.PI*2, start: theta5}]
+    .forEach(function (elem) {
+        var bar = new ScrollBar({
+            container: elem.name,
+            pixelWidth: 500,
+            pixelHeight: 50,
+            minX: elem.min,
+            maxX: elem.max,
+            startX:elem.start,
+            drawColor: "darkGray",
+            backgroundColor: "lightGray",
+            movedToCallback: function (x) {
+                var tmp = fb[elem.field];
+                fb[elem.field] = x;
+                try {
+                    drawPath();
+                } catch (exception) {
+                    fb[elem.field] = tmp;
+                    bar.setPosition(tmp);
+                }
+            }, 
+        });
+    });
     
     var mousePressed = false,
         pressStartX = null;
@@ -58,7 +112,6 @@ click and drag gray area<br/><br/>
     };
     
     plot.setMouseDown(function (x, y) {
-        var dist = Math.sqrt((x - fb.d) * (x - fb.d) + (y - 0) * (y - 0));
         if (x > fb.d - blockWidth/2 && x < fb.d + blockWidth/2 && 
             y > -blockHeight/2 && y < blockWidth/2) 
         {
@@ -93,7 +146,7 @@ click and drag gray area<br/><br/>
         }
     });
     
-    var drawFourBar = function () {
+    var drawFourBarPositions = function () {
         plot.restoreToBackground();
         
         plot.drawRect(fb.d - blockWidth/2, -blockHeight/2, blockWidth, blockHeight, 
@@ -114,14 +167,30 @@ click and drag gray area<br/><br/>
         plot.drawLine(fb.x2, fb.y2, fb.x5, fb.y5, {drawColor:"green"});
     };
 
+    var drawFourBarVelocities = function () {
+        [{theta: fb.theta2, r: fb.a, omega: fb.omega2, x: 0, y: 0},
+         {theta: fb.theta3, r: fb.b/2, omega: fb.omega3, x: fb.x2, y: fb.y2},
+         {theta: fb.theta4, r: fb.c/2, omega: fb.omega4, x: fb.d, y: 0}].forEach(
+        function (e) {
+            var thetab = e.theta + e.omega*1000,
+                xb = e.x + e.r*Math.cos(thetab),
+                yb = e.y + e.r*Math.sin(thetab);
+
+            plot.drawArc(e.x, e.y, e.r, e.theta, thetab, e.omega < 0, {drawColor:"black"});
+            plot.drawArrowHead(xb, yb, thetab + Math.PI/2*((e.omega < 0) ? -1 : 1), {drawColor:"black"});
+        });
+    };
+    
     setInterval(function () {
         var theta2 = count * Math.PI * 2 / maxCount;
         
         fb.calcPositions(theta2);
-        drawFourBar();
+        fb.calcVelocities(omega2);
+        drawFourBarPositions();
+        drawFourBarVelocities();
 
         count = (count + speed) % maxCount;
-    }, 30);
+    }, DT);
     
     drawPath();
 }());
