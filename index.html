@@ -44,79 +44,78 @@ click and drag gray area<br/>
         
         DT = 30,
         
-        count = 0,
-        maxCount = 200,
-        speed = 2,
-        
-        omega2 = (Math.PI*2)/((maxCount/speed)*DT),
-        
         blockHeight = 1,
         blockWidth = 1.5,
         
-        a = 1,
-        b = 4,
-        c = 3,
-        d = 3,
-        e = 6,
-        theta5 = Math.PI + Math.PI / 6,
+        fb = createFourBar(1, 4, 3, 3, 6, 0, Math.PI + Math.PI / 6),
         
-        fb = createFourBar(a, b, c, d, e, 0, theta5);
+        optimizing = false;
     
     plot.drawPoint(0, 0);
     plot.pushBackground();
     
-    [{name:"a_input", field: "a", min: 0, max: 10, start: a},
-     {name:"b_input", field: "b", min: 0, max: 10, start: b}, 
-     {name:"c_input", field: "c", min: 0, max: 10, start: c}, 
-     {name:"e_input", field: "e", min: 0, max: 10, start: e},
-     {name:"theta5_input", field: "theta5", min: 0, max: Math.PI*2, start: theta5}]
-    .forEach(function (elem) {
-        var bar = new ScrollBar({
-            container: elem.name,
-            pixelWidth: 500,
-            pixelHeight: 50,
-            minX: elem.min,
-            maxX: elem.max,
-            startX:elem.start,
-            drawColor: "darkGray",
-            backgroundColor: "lightGray",
-            movedToCallback: function (x) {
-                var tmp = fb[elem.field];
-                fb[elem.field] = x;
-                try {
-                    drawPath(calcPoints(), "red");
-                } catch (exception) {
-                    fb[elem.field] = tmp;
-                    bar.setPosition(tmp);
-                }
-            }, 
-        });
+    var bars = [];
+    
+    [{name:"a_input", field: "a", min: 0, max: 10},
+     {name:"b_input", field: "b", min: 0, max: 10}, 
+     {name:"c_input", field: "c", min: 0, max: 10}, 
+     {name:"e_input", field: "e", min: 0, max: 15},
+     {name:"theta5_input", field: "theta5", min: 0, max: Math.PI*2}]
+    .forEach(function (elem, index) {
+        bars[index] = {
+            field: elem.field,
+            bar: new ScrollBar({
+                container: elem.name,
+                pixelWidth: 500,
+                pixelHeight: 50,
+                minX: elem.min,
+                maxX: elem.max,
+                startX: fb[elem.field],
+                drawColor: "darkGray",
+                backgroundColor: "lightGray",
+                movedToCallback: function (x) {
+                    var tmp = fb[elem.field];
+                    fb[elem.field] = x;
+                    try {
+                        calcPath();
+                    } catch (exception) {
+                        fb[elem.field] = tmp;
+                        bars[index].bar.setPosition(tmp);
+                    }
+                }, 
+            })
+        };
     });
     
-    var draggingBlock = false,
-        pressStartX = null,
-        goalPath = [];
-        
-    var calcPoints = function () {
+    var calcPath = function (numPoints) {
+        numPoints = numPoints || 100;
         var points = [];
         
-        for (var i = 0; i < maxCount+1; i++) {
-            var theta2 = i * Math.PI * 2 / maxCount;
+        for (var i = 0; i < numPoints; i++) {
+            var theta2 = i * Math.PI * 2 / (numPoints);
             fb.calcPositions(theta2);
             points.push([fb.x5, fb.y5]);
         }
         
+        calcPath.latest = points;
+        
         return points;
     };
-
-    var drawPath = function (points, color) {
-        plot.popBackground();
-        plot.drawPoint(0, 0);
-        plot.drawPath(points, {drawColor:color});
-        plot.pushBackground();
+    
+    var getPath = function () {
+        return calcPath.latest || calcPath();
     };
     
-    var makingGoalPath = false;
+    
+    //
+    // Mouse interaction
+    //
+    
+    var draggingBlock = false,
+        pressStartX = null,
+        
+        drawingGoalPath = false,
+        goalPath = null;
     
     plot.setMouseDown(function (x, y) {
         if (x > fb.d - blockWidth/2 && x < fb.d + blockWidth/2 && 
@@ -125,33 +124,18 @@ click and drag gray area<br/>
             draggingBlock = true;
             pressStartX = x;
         } else {
-            goalPath = [[x,y]];
-            makingGoalPath = true;
+            drawingGoalPath = true;
+            goalPath = [[x, y]];
         }
     });
     
-    var drawnGoalPath = false;
-    
     plot.setMouseUp(function (x, y) {
-        if (draggingBlock) {
-            var deltaX = x - pressStartX;
-            fb.d += deltaX;
-            try {
-                drawPath("red");
-            } catch (e) {
-                fb.d -= deltaX;
-            }
-        } else if (goalPath.length > 0) {
-            if (drawnGoalPath) {
-                plot.popBackground();
-            }
-            drawnGoalPath = true;
-            drawPath(goalPath, "black");
-            plot.pushBackground();
-            makingGoalPath = false;
-            optimize();
-        }
         draggingBlock = false;
+        
+        if (drawingGoalPath) {
+            drawingGoalPath = false;
+            optimize(goalPath);
+        }
     });
     
     plot.setMouseMove(function (x, y) {
@@ -159,19 +143,22 @@ click and drag gray area<br/>
             var deltaX = x - pressStartX;
             fb.d += deltaX;
             try {
-                drawPath("red");
+                calcPath();
                 pressStartX = x;
             } catch (e) {
                 fb.d -= deltaX;
             }
-        } else if (goalPath.length > 0 && makingGoalPath) {
-            goalPath.push([x,y]);
+        } else if (drawingGoalPath) {
+            goalPath.push([x, y]);
         }
     });
     
+    
+    // 
+    // Graphics
+    //
+    
     var drawFourBarPositions = function () {
-        plot.restoreToBackground();
-        
         plot.drawRect(fb.d - blockWidth/2, -blockHeight/2, blockWidth, blockHeight, 
             {drawColor:"gray"});
         plot.drawPoint(fb.d, 0);
@@ -204,76 +191,95 @@ click and drag gray area<br/>
         });
     };
     
-    setInterval(function () {
-        var theta2 = count * Math.PI * 2 / maxCount;
-        
-        fb.calcPositions(theta2);
-        fb.calcVelocities(omega2);
-        drawFourBarPositions();
-        //drawFourBarVelocities();
-
-        count = (count + speed) % maxCount;
-    }, DT);
-        
-    var calcError = function () {
-        var points = calcPoints();
-        
-        var goalError = 0;
-        
-        for (var i = 0; i < goalPath.length; i++) {
-            var goal = goalPath[i];
-            var minError = 1e1000;
+    setInterval(
+    (function () {
+        var count = 0,
+            maxCount = 200,
+            speed = 2;
+    
+        return function () {
+            var theta2 = count * Math.PI * 2 / maxCount;
             
-            for (var j = 0 ; j < points.length; j++) {
-                var elem = points[j];
+            fb.calcPositions(theta2);
+            fb.calcVelocities((Math.PI*2)/((maxCount/speed)*DT));
             
-                var gerr = Math.sqrt(
-                           (elem[0] - goal[0])*(elem[0] - goal[0]) + 
-                           (elem[1] - goal[1])*(elem[1] - goal[1])
-                           );
-
-                if (gerr < minError) { 
-                    minError = gerr;
-                }
+            plot.restoreToBackground();
+            drawFourBarPositions();
+            if (!optimizing) {
+                drawFourBarVelocities();
             }
             
-            goalError += minError;
-        }
-        
-        goalError /= goalPath.length;
-        
-        var pointsError = 0;
-        
-        for (var i = 0; i < points.length; i++) {
-            var elem = points[i];
-            var minError = 1e1000;
+            plot.drawPath(getPath(), {drawColor:"red"});
             
-            for (var j = 0 ; j < goalPath.length; j++) {
-                var goal = goalPath[j];
-            
-                var gerr = Math.sqrt(
-                           (elem[0] - goal[0])*(elem[0] - goal[0]) + 
-                           (elem[1] - goal[1])*(elem[1] - goal[1])
-                           );
-
-                if (gerr < minError) { 
-                    minError = gerr;
-                }
+            if (goalPath) {
+                plot.drawPath(goalPath, {drawColor:"black"});
             }
-            
-            pointsError += minError;
+
+            if (!optimizing) {
+                count = (count + speed) % maxCount;
+            }
         }
+    })()
+    , DT);
+    
+    
+    //
+    // Gradient optimization
+    //
+    
+    var calcCenter = function (path) {
+        var pathcx = 0,
+            pathcy = 0;
         
-        pointsError /= points.length;
+        path.forEach(function (e) {
+            pathcx += e[0];
+            pathcy += e[1];
+        });
         
-        return 0*pointsError + 10*goalError;
+        return [pathcx / path.length,
+                pathcy / path.length];
     };
     
-    var running = false;
+    var euclid = function (p1, p2) {
+        var dx = p1[0] - p2[0],
+            dy = p1[1] - p2[1];
+
+        return Math.sqrt(dx*dx + dy*dy);
+    };
+    
+    var calcPathMinDiff = function (path1, path2) {
+        var error = 0;
+        
+        for (var i = 0; i < path1.length; i++) {
+            var minErr = 1e100;
+        
+            for (var j = 0; j < path2.length; j++) {
+                var err = euclid(path1[i], path2[j]);
+                
+                if (err < minErr) {
+                    minErr = err;
+                }
+            }
+            
+            error += minErr;
+        }
+        
+        return error;
+    };
+        
+    var calcError = function () {
+        var path = calcPath();
+        
+        var centerErr = euclid(calcCenter(path), calcCenter(goalPath)),
+            goalPathErr = calcPathMinDiff(goalPath, path),
+            curPathErr = calcPathMinDiff(path, goalPath);
+        
+        return 100*goalPathErr + 10*centerErr + curPathErr;
+    };
     
     var optimize = function () {
         var prevError = 1e1000;
-        var scale = 5;
+        var scale = 10;
         
         var choices = [
             {name:"a", mutate:scale*.01},
@@ -281,26 +287,34 @@ click and drag gray area<br/>
             {name:"c", mutate:scale*.01},
             {name:"d", mutate:scale*.01},
             {name:"e", mutate:scale*.01},
-            {name:"theta5", mutate:Math.PI*2/1000}];
+            {name:"theta5", mutate:Math.PI*2/100}];
             
+        optimizing = true;    
+        
         (function f() {
-            if (makingGoalPath) {
-                return;
-            }
-            
+            if (drawingGoalPath) return;
+        
             var lowestError = 1e100;
             var bestElements = null;
             
-            for (var i = 0; i < (1<<(choices.length)); i++) {
+            var flag = true;
+            
+            for (var i = 0; i < Math.pow(3,choices.length); i++) {
                 fb.save();
                 var elements = fb.copyElements();
             
-                for (var j = choices.length-1; j >= 0; j--) {
-                    if ((i>>j)&1) {
+                var p = 1;
+                var noaction = true;
+                for (var j = 0; j < choices.length; j++) {
+                    var choice = Math.floor(i/p)%3;
+                    if (choice === 0) {
                         elements[choices[j].name] += choices[j].mutate;
-                    } else {
+                        noaction = false;
+                    } else if (choice === 1) {
                         elements[choices[j].name] -= choices[j].mutate;
+                        noaction = false;
                     }
+                    p*=3;
                 }
                 
                 fb.setElements(elements);
@@ -311,6 +325,7 @@ click and drag gray area<br/>
                     if (error < lowestError) {
                         bestElements = elements;
                         lowestError = error;
+                        flag = noaction;
                     }
                 } catch (ex) {};
                 
@@ -318,13 +333,18 @@ click and drag gray area<br/>
             }
             
             fb.setElements(bestElements);
-            drawPath(calcPoints(), "red");
             
-            setTimeout(f, 10);
+            bars.forEach(function (elem) {
+                elem.bar.setPosition(fb[elem.field]);
+            });
+            
+            if (!flag) {
+                setTimeout(f, 50);
+            } else {
+                optimizing = false;
+            }
         })();
     };
-    
-    drawPath(calcPoints(), "red");
 }());
 </script>
 </html>
