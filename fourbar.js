@@ -23,11 +23,15 @@ var createFourBar = function (a, b, c, d, e, theta5) {
         },
     };
     
+    that.a = a;
+    that.b = b;
+    that.c = c;
     that.d = d;
+    that.e = e;
+    that.x2 = null;
+    that.y2 = null;
     that.x3 = null;
     that.y3 = null;
-    that.x4 = null;
-    that.y4 = null;
     that.x5 = null;
     that.y5 = null;
 
@@ -54,6 +58,19 @@ var createFourBar = function (a, b, c, d, e, theta5) {
         that.y3 = c * SafeMath.sin(theta4);
         that.x5 = that.x3 + e * Math.cos(theta5 + theta3);
         that.y5 = that.y3 + e * Math.sin(theta5 + theta3);
+    };
+    
+    that.calcAccelerations = function (alpha2) {
+        var d = that.d;
+    
+        var A = c*sin(theta4),
+            B = b*sin(theta3),
+            C = a*alpha2*sin(theta2) + a*omega2*omega2*cos(theta2) + b*omega3*omega3*cos(theta3) - c*omega4*omega4*cos(theta4),
+            D = c*cos(theta4),
+            E = b*cos(theta3),
+            F = a*alpha2*cos(theta2) - a*omega2*omega2*sin(theta2) - b*omega3*omega3*sin(theta3) + c*omega4*s4*sin(theta4),
+            alpha3 = (C*D - A*F)/(A*E - B*D),
+            alpha4 = (C*E - B*F)/(A*E - B*D);
     };
     
     return that;
