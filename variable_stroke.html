@@ -25,6 +25,8 @@ adjust link lengths and positions using scrollbars below<br/>
 <div id="pivotAngle_input"></div>
 <div id="pivotX_input"></div>
 <div id="pivotY_input"></div>
+<div id="angleMag"></div>
+<div id="angleCenter"></div>
 <script src="../plotjs/plot.js"></script>
 <script src="fourbar.js"></script>
 <script src="scrollbar.js"></script>
@@ -120,7 +122,8 @@ adjust link lengths and positions using scrollbars below<br/>
     };
     
     var calcPath = function (numPoints) {
-        var points = [];
+        var points = [],
+            angles = [];
         
         fb1.pushState();
         fb2.pushState();
@@ -130,6 +133,7 @@ adjust link lengths and positions using scrollbars below<br/>
                 fb1.theta2 = i * Math.PI * 2 / numPoints;
                 doMath();
                 points.push([fb2.pB.x, fb2.pB.y]);
+                angles.push(Math.atan2(fb2.pB.y - fb2.O4.y, fb2.pB.x - fb2.O4.x));
             }
         } catch (e) {
             return false;
@@ -138,9 +142,28 @@ adjust link lengths and positions using scrollbars below<br/>
             fb2.popState();
         }
         
+        setAngles(angles);
+        
         calcPath.latest = points;
         
         return true;
+    };
+    
+    var setAngles = function (angles) {
+        var minAngle = angles[0], 
+            maxAngle = angles[0];
+        
+        angles.forEach(function (elem, index, array) {
+            if (elem < minAngle) {
+                minAngle = elem;
+            }
+            if (elem > maxAngle) {
+                maxAngle = elem;
+            }
+        });
+        
+        document.getElementById("angleMag").innerHTML = maxAngle - minAngle;
+        document.getElementById("angleCenter").innerHTML = (minAngle + maxAngle)/2;
     };
 
     
@@ -154,55 +177,55 @@ adjust link lengths and positions using scrollbars below<br/>
         {name:"fb1_a_input", min: 0, max: 100, startX: Math.abs(fb1.a), 
         movedToCallback: function (x) {
             var tmp = fb1.a;
-            fb1.a = x * ((tmp<0)?-1:1);
+            fb1.a = x;
 
             if (!calcPath(100)) {
                 fb1.a = tmp;
-                bars[0].bar.setPosition(Math.abs(tmp));
+                bars[0].bar.setPosition(tmp);
             }
         }},
 
-        {name:"fb1_b_input", min: 0, max: 100, startX: Math.abs(fb1.b),
+        {name:"fb1_b_input", min: 0, max: 100, startX: fb1.b,
         movedToCallback: function (x) {
             var tmp = fb1.b;
-            fb1.b = x * ((tmp<0)?-1:1);
+            fb1.b = x;
 
             if (!calcPath(100)) {
                 fb1.b = tmp;
-                bars[1].bar.setPosition(Math.abs(tmp));
+                bars[1].bar.setPosition(tmp);
             }
         }}, 
 
-        {name:"fb1_c_input", min: 0, max: 100, startX: Math.abs(fb1.c),
+        {name:"fb1_c_input", min: -100, max: 0, startX: fb1.c,
         movedToCallback: function (x) {
             var tmp = fb1.c;
-            fb1.c = x * ((tmp<0)?-1:1);
+            fb1.c = x;
 
             if (!calcPath(100)) {
                 fb1.c = tmp;
-                bars[2].bar.setPosition(Math.abs(tmp));
+                bars[2].bar.setPosition(tmp);
             }
         }}, 
 
-        {name:"fb2_b_input", min: 0, max: 100, startX: Math.abs(fb2.b),
+        {name:"fb2_b_input", min: 0, max: 100, startX: fb2.b,
         movedToCallback: function (x) {
             var tmp = fb2.b;
-            fb2.b = x * ((tmp<0)?-1:1);
+            fb2.b = x;
 
             if (!calcPath(100)) {
                 fb2.b = tmp;
-                bars[3].bar.setPosition(Math.abs(tmp));
+                bars[3].bar.setPosition(tmp);
             }
         }}, 
 
-        {name:"fb2_c_input", min: 0, max: 100, startX: Math.abs(fb2.c),
+        {name:"fb2_c_input", min: -100, max: 0, startX: fb2.c,
         movedToCallback: function (x) {
             var tmp = fb2.c;
-            fb2.c = x * ((tmp<0)?-1:1);
+            fb2.c = x;
 
             if (!calcPath(100)) {
                 fb2.c = tmp;
-                bars[4].bar.setPosition(Math.abs(tmp));
+                bars[4].bar.setPosition(tmp);
             }
         }},
 
@@ -284,6 +307,7 @@ adjust link lengths and positions using scrollbars below<br/>
             field: elem.field,
             bar: new ScrollBar({
                 container: elem.name,
+                label: elem.name,
                 pixelWidth: 500,
                 pixelHeight: 30,
                 minX: elem.min,

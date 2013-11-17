@@ -39,16 +39,26 @@ ScrollBar.prototype.create = function (config) {
     config.minY = 0;
     config.maxY = 1;
     config.maxX += that.BAR_WIDTH;
-    var  plot = new Plot(config);
+    var plot = new Plot(config);
 
     // configurations (optional parameters)
     that.BAR_WIDTH = config.BAR_WIDTH || that.BAR_WIDTH;
     that.movedToCallback = config.movedToCallback || that.movedToCallback;
+    that.label = config.label || false;
 
     // public methods
     that.setPosition = function (x) {
         plot.restoreToBackground();
         plot.drawRect(x, 0, that.BAR_WIDTH, 1);
+        
+        // TODO: this is fucking terrible I don't know how I can sleep at night with this in here
+        if (that.label) {
+            plot.drawText(that.label, 10, 20, 
+                {font: "12px sans-serif", drawColor: "black"});
+            plot.drawText(Math.round(x*1000)/1000, plot.pixelWidth - 50, 20, 
+                {font: "12px sans-serif", drawColor: "black"});
+        }
+
         curX = x;
     };
     

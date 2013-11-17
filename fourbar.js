@@ -206,8 +206,12 @@ FourBar.prototype.create = function (config) {
         });
     };
     
-    that.popState = function () {
+    that.popState = function (ignoreState) {
         var old = stateStack.pop();
+        
+        if (ignoreState) {
+            return;
+        }
         
         that.a = old.a;
         that.b = old.b;
