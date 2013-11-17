@@ -19,9 +19,12 @@ adjust link lengths and positions using scrollbars below<br/>
 <div id="fb1_a_input"></div>
 <div id="fb1_b_input"></div>
 <div id="fb1_c_input"></div>
-<div id="pivot_input"></div>
 <div id="fb2_b_input"></div>
 <div id="fb2_c_input"></div>
+<div id="pivotLength_input"></div>
+<div id="pivotAngle_input"></div>
+<div id="pivotX_input"></div>
+<div id="pivotY_input"></div>
 <script src="../plotjs/plot.js"></script>
 <script src="fourbar.js"></script>
 <script src="scrollbar.js"></script>
@@ -181,7 +184,29 @@ adjust link lengths and positions using scrollbars below<br/>
             }
         }}, 
 
-        {name:"pivot_input", min: 0, max: Math.PI*2, startX: pivotAngle,
+        {name:"fb2_b_input", min: 0, max: 100, startX: Math.abs(fb2.b),
+        movedToCallback: function (x) {
+            var tmp = fb2.b;
+            fb2.b = x * ((tmp<0)?-1:1);
+
+            if (!calcPath(100)) {
+                fb2.b = tmp;
+                bars[3].bar.setPosition(Math.abs(tmp));
+            }
+        }}, 
+
+        {name:"fb2_c_input", min: 0, max: 100, startX: Math.abs(fb2.c),
+        movedToCallback: function (x) {
+            var tmp = fb2.c;
+            fb2.c = x * ((tmp<0)?-1:1);
+
+            if (!calcPath(100)) {
+                fb2.c = tmp;
+                bars[4].bar.setPosition(Math.abs(tmp));
+            }
+        }},
+
+        {name:"pivotAngle_input", min: 0, max: Math.PI*2, startX: pivotAngle,
         movedToCallback: function (x) {
             var tmpAngle = pivotAngle,
                 tmpX = fb1.O4.x,
@@ -195,31 +220,63 @@ adjust link lengths and positions using scrollbars below<br/>
                 pivotAngle = tmpAngle;
                 fb1.O4.x = tmpX;
                 fb1.O4.y = tmpY;
-                bars[3].bar.setPosition(tmpAngle);
+                bars[5].bar.setPosition(tmpAngle);
             }
         }},
 
-        {name:"fb2_b_input", min: 0, max: 100, startX: Math.abs(fb2.b),
+        {name:"pivotLength_input", min: 0, max: 100, startX: pivotLength,
         movedToCallback: function (x) {
-            var tmp = fb2.b;
-            fb2.b = x * ((tmp<0)?-1:1);
-
+            var tmpLen = pivotLength,
+                tmpX = fb1.O4.x,
+                tmpY = fb1.O4.y;
+            
+            pivotLength = x;
+            fb1.O4.x = pivotPoint.x + pivotLength*Math.cos(pivotAngle);
+            fb1.O4.y = pivotPoint.y + pivotLength*Math.sin(pivotAngle);
+            
             if (!calcPath(100)) {
-                fb2.b = tmp;
-                bars[4].bar.setPosition(Math.abs(tmp));
+                pivotLength = tmpLen;
+                fb1.O4.x = tmpX;
+                fb1.O4.y = tmpY;
+                bars[6].bar.setPosition(pivotLength);
             }
-        }}, 
+        }},
 
-        {name:"fb2_c_input", min: 0, max: 100, startX: Math.abs(fb2.c),
+        {name:"pivotX_input", min: 0, max: 100, startX: pivotPoint.x,
         movedToCallback: function (x) {
-            var tmp = fb2.c;
-            fb2.c = x * ((tmp<0)?-1:1);
-
+            var tmpLen = pivotPoint.x,
+                tmpX = fb1.O4.x,
+                tmpY = fb1.O4.y;
+            
+            pivotPoint.x = x;
+            fb1.O4.x = pivotPoint.x + pivotLength*Math.cos(pivotAngle);
+            fb1.O4.y = pivotPoint.y + pivotLength*Math.sin(pivotAngle);
+            
             if (!calcPath(100)) {
-                fb2.c = tmp;
-                bars[5].bar.setPosition(Math.abs(tmp));
+                pivotPoint.x = tmpLen;
+                fb1.O4.x = tmpX;
+                fb1.O4.y = tmpY;
+                bars[7].bar.setPosition(pivotPoint.x);
             }
-        }}
+        }},
+
+        {name:"pivotY_input", min: -50, max: 50, startX: pivotPoint.y,
+        movedToCallback: function (x) {
+            var tmpLen = pivotPoint.y,
+                tmpX = fb1.O4.x,
+                tmpY = fb1.O4.y;
+            
+            pivotPoint.y = x;
+            fb1.O4.x = pivotPoint.x + pivotLength*Math.cos(pivotAngle);
+            fb1.O4.y = pivotPoint.y + pivotLength*Math.sin(pivotAngle);
+            
+            if (!calcPath(100)) {
+                pivotPoint.y = tmpLen;
+                fb1.O4.x = tmpX;
+                fb1.O4.y = tmpY;
+                bars[8].bar.setPosition(pivotPoint.y);
+            }
+        }},
     ];
     
     barData.forEach(function (elem, index) {
