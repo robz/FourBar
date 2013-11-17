@@ -81,7 +81,7 @@ ScrollBar.prototype.create = function (config) {
     });
     
     plot.setMouseOut(function () {
-        mousePressed = false;
+        // mousePressed = false;
     });
 
     that.setPosition(curX);

@@ -14,12 +14,14 @@ canvas {
 }
 </style>
 <h3>Variable-stroke mechanism</h3>
-adjust link lengths using scrollbars below<br/>
+adjust link lengths and positions using scrollbars below<br/>
 <div id="container"></div>
-<div id="a_input"></div>
-<div id="b_input"></div>
-<div id="c_input"></div>
-<div id="O4_input"></div>
+<div id="fb1_a_input"></div>
+<div id="fb1_b_input"></div>
+<div id="fb1_c_input"></div>
+<div id="pivot_input"></div>
+<div id="fb2_b_input"></div>
+<div id="fb2_c_input"></div>
 <script src="../plotjs/plot.js"></script>
 <script src="fourbar.js"></script>
 <script src="scrollbar.js"></script>
@@ -27,16 +29,17 @@ adjust link lengths using scrollbars below<br/>
 (function () {
     "use strict";
     
-    var scale = 6.0,
+    var scale = 7.0,
+        scaleY = 3/4,
     
         plot = new Plot({
             container: "container",
             pixelWidth: 500,
-            pixelHeight: 400,
-            minX: -2*scale,
-            maxX: 18*scale,
-            minY: -10*scale,
-            maxY: 8*scale,
+            pixelHeight: 300,
+            minX: -4*scale,
+            maxX: 16*scale,
+            minY: -10*scale*scaleY,
+            maxY: 8*scale*scaleY,
             pointRadius: 0.2*scale,
             lineWidth: 0.1*scale,
             drawColor: "blue",
@@ -69,96 +72,172 @@ adjust link lengths using scrollbars below<br/>
         
         DT = 30;
 
+
+    // 
+    // Calculations
+    //
+    
     var euclid = function (p1, p2) {
         var dx = p1.x - p2.x,
             dy = p1.y - p2.y;
         return Math.sqrt(dx * dx + dy * dy);
     };
+    
+    var calcLawOfCosines = function (p1, p2, p3) {
+        var a = euclid(p1, p3),
+            b = euclid(p1, p2),
+            c = euclid(p2, p3);
+            
+        return Math.acos((b*b + c*c - a*a)/(2*b*c));
+    };
+
+    var calcLineFunction = function (p1, p2) {
+        var m = (p2.y - p1.y)/(p2.x - p1.x),
+            b = p1.y - p1.x * m;
+
+        return function (x) {
+            return m*x + b;
+        };
+    };
+    
+    var doMath = function () {
+        fb1.runPositionAnalysis();
+        fb1.recalculatePoints();
+        
+        var fb2input = calcLawOfCosines(fb1.pB, fb2.O2, fb2.O4);
+        if (calcLineFunction(fb2.O2, fb2.O4)(fb1.pB.x) > fb1.pB.y) {
+            fb2input = Math.PI*2 - fb2input;
+        }
+        fb2.theta2 = fb2input;
+        
+        fb2.a = -fb1.c;
+        
+        fb2.runPositionAnalysis();
+        fb2.recalculatePoints();
+    };
+    
+    var calcPath = function (numPoints) {
+        var points = [];
+        
+        fb1.pushState();
+        fb2.pushState();
+        
+        try {
+            for (var i = 0; i < numPoints; i++) {
+                fb1.theta2 = i * Math.PI * 2 / numPoints;
+                doMath();
+                points.push([fb2.pB.x, fb2.pB.y]);
+            }
+        } catch (e) {
+            return false;
+        } finally {
+            fb1.popState();
+            fb2.popState();
+        }
+        
+        calcPath.latest = points;
+        
+        return true;
+    };
+
+    
     //
     // Input scroll bars
     //
-    /*
     
     var bars = [];
     
-    [{name:"fb1_a_input", field: "a", min: 0, max: 50},
-     {name:"fb1_b_input", field: "b", min: 0, max: 50}, 
-     {name:"fb1_c_input", field: "c", min: 0, max: 50},
-     {name:"fb1_O4_input", field: "O4", min: 0, max: 50, 
-        startX: euclid(fb.O2, fb.O4),
-        movedToCallback: function (v, bar) {
-            var zeta = Math.atan2(fb.O4.y - fb.O2.y, fb.O4.x - fb.O2.x),
-                tmp = fb.O4,
-                tmpd = euclid(fb.O2, fb.O4);
-
-            fb.O4 = {
-                x: fb.O2.x + v * Math.cos(zeta),
-                y: fb.O2.y + v * Math.sin(zeta)
-                };
+    var barData = [
+        {name:"fb1_a_input", min: 0, max: 100, startX: Math.abs(fb1.a), 
+        movedToCallback: function (x) {
+            var tmp = fb1.a;
+            fb1.a = x * ((tmp<0)?-1:1);
 
             if (!calcPath(100)) {
-                fb.O4 = tmp;
-                bar.setPosition(tmpd);
+                fb1.a = tmp;
+                bars[0].bar.setPosition(Math.abs(tmp));
+            }
+        }},
+
+        {name:"fb1_b_input", min: 0, max: 100, startX: Math.abs(fb1.b),
+        movedToCallback: function (x) {
+            var tmp = fb1.b;
+            fb1.b = x * ((tmp<0)?-1:1);
+
+            if (!calcPath(100)) {
+                fb1.b = tmp;
+                bars[1].bar.setPosition(Math.abs(tmp));
+            }
+        }}, 
+
+        {name:"fb1_c_input", min: 0, max: 100, startX: Math.abs(fb1.c),
+        movedToCallback: function (x) {
+            var tmp = fb1.c;
+            fb1.c = x * ((tmp<0)?-1:1);
+
+            if (!calcPath(100)) {
+                fb1.c = tmp;
+                bars[2].bar.setPosition(Math.abs(tmp));
+            }
+        }}, 
+
+        {name:"pivot_input", min: 0, max: Math.PI*2, startX: pivotAngle,
+        movedToCallback: function (x) {
+            var tmpAngle = pivotAngle,
+                tmpX = fb1.O4.x,
+                tmpY = fb1.O4.y;
+            
+            pivotAngle = x;
+            fb1.O4.x = pivotPoint.x + pivotLength*Math.cos(pivotAngle);
+            fb1.O4.y = pivotPoint.y + pivotLength*Math.sin(pivotAngle);
+            
+            if (!calcPath(100)) {
+                pivotAngle = tmpAngle;
+                fb1.O4.x = tmpX;
+                fb1.O4.y = tmpY;
+                bars[3].bar.setPosition(tmpAngle);
+            }
+        }},
+
+        {name:"fb2_b_input", min: 0, max: 100, startX: Math.abs(fb2.b),
+        movedToCallback: function (x) {
+            var tmp = fb2.b;
+            fb2.b = x * ((tmp<0)?-1:1);
+
+            if (!calcPath(100)) {
+                fb2.b = tmp;
+                bars[4].bar.setPosition(Math.abs(tmp));
+            }
+        }}, 
+
+        {name:"fb2_c_input", min: 0, max: 100, startX: Math.abs(fb2.c),
+        movedToCallback: function (x) {
+            var tmp = fb2.c;
+            fb2.c = x * ((tmp<0)?-1:1);
+
+            if (!calcPath(100)) {
+                fb2.c = tmp;
+                bars[5].bar.setPosition(Math.abs(tmp));
             }
         }}
-    ].forEach(function (elem, index) {
+    ];
+    
+    barData.forEach(function (elem, index) {
         bars[index] = {
             field: elem.field,
             bar: new ScrollBar({
                 container: elem.name,
                 pixelWidth: 500,
-                pixelHeight: 50,
+                pixelHeight: 30,
                 minX: elem.min,
                 maxX: elem.max,
-                startX: elem.startX || Math.abs(fb[elem.field]),
+                startX: elem.startX,
                 drawColor: "darkGray",
                 backgroundColor: "lightGray",
-                movedToCallback: function (x) {
-                    if (elem.movedToCallback) {
-                        elem.movedToCallback(x, bars[index].bar);
-                        return;
-                    }
-                
-                    var tmp = fb[elem.field];
-                    fb[elem.field] = x * ((tmp<0)?-1:1);
-                    
-                    if (!calcPath(100)) {
-                        fb[elem.field] = tmp;
-                        bars[index].bar.setPosition(Math.abs(tmp));
-                    }
-                }, 
+                movedToCallback: elem.movedToCallback
             })
         };
     });
-    */
-    
-    // 
-    // Calculations...
-    //
-    
-    var calcPath = function (fb, numPoints) {
-        var points = [];
-        
-        fb.pushState();
-        
-        try {
-            for (var i = 0; i < numPoints; i++) {
-                fb.theta2 = i * Math.PI * 2 / numPoints;
-                fb.runPositionAnalysis();
-                fb.recalculatePoints();
-                points.push([fb.pB.x, fb.pB.y]);
-            }
-            
-        } catch (e) {
-            return false;
-        } finally {
-            fb.popState();
-        }
-
-        calcPath.latest = points;
-        
-        return true;
-    };
     
     
     // 
@@ -185,23 +264,6 @@ adjust link lengths using scrollbars below<br/>
         plot.drawLine(pivotPoint.x, pivotPoint.y, fb1.O4.x, fb1.O4.y);
     };
     
-    var calcLawOfCosines = function (p1, p2, p3) {
-        var a = euclid(p1, p3),
-            b = euclid(p1, p2),
-            c = euclid(p2, p3);
-            
-        return Math.acos((b*b + c*c - a*a)/(2*b*c));
-    };
-
-    var calcLineFunction = function (p1, p2) {
-        var m = (p2.y - p1.y)/(p2.x - p1.x),
-            b = p1.y - p1.x * m;
-
-        return function (x) {
-            return m*x + b;
-        };
-    };
-    
     var iteration = (function () {
         var count = 0,
             maxCount = 200,
@@ -210,21 +272,16 @@ adjust link lengths using scrollbars below<br/>
         return function () {
             fb1.theta2 = count * Math.PI * 2 / maxCount;
             
-            fb1.runPositionAnalysis();
-            fb1.recalculatePoints();
-            
-            var fb2input = calcLawOfCosines(fb1.pB, fb2.O2, fb2.O4);
-            if (calcLineFunction(fb2.O2, fb2.O4)(fb1.pB.x) > fb1.pB.y) {
-                fb2input = Math.PI*2 - fb2input;
-            }
-            
-            fb2.theta2 = fb2input;
-            
-            fb2.runPositionAnalysis();
-            fb2.recalculatePoints();
+            doMath();
             
             plot.restoreToBackground();
             drawLinkages();
+            
+            if (!calcPath.latest) {
+                calcPath(100);
+            }
+            
+            plot.drawPath(calcPath.latest, {drawColor:"red"});
             
             count = (count + speed)%maxCount;
         }
