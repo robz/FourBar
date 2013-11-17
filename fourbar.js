@@ -106,15 +106,11 @@ FourBar.prototype.create = function (config) {
             O4 = that.O4,
             zeta = Math.atan2(O4.y - O2.y, O4.x - O2.x);
             
-        that.pA = {
-            x: O2.x + a * Math.cos(zeta + theta2),
-            y: O2.y + a * Math.sin(zeta + theta2)
-        };
+        that.pA.x = O2.x + a * Math.cos(zeta + theta2);
+        that.pA.y = O2.y + a * Math.sin(zeta + theta2);
         
-        that.pB = {
-            x: that.pA.x + b * Math.cos(zeta + theta3),
-            y: that.pA.y + b * Math.sin(zeta + theta3)
-        };
+        that.pB.x = that.pA.x + b * Math.cos(zeta + theta3);
+        that.pB.y = that.pA.y + b * Math.sin(zeta + theta3);
         
         // consistency check
         var pB2 = {
@@ -221,10 +217,14 @@ FourBar.prototype.create = function (config) {
         that.theta3 = old.theta3;
         that.theta4 = old.theta4;
         
-        that.O2 = old.O2;
-        that.O4 = old.O4;
-        that.pA = old.pA;
-        that.pB = old.pB;
+        that.O2.x = old.O2.x;
+        that.O2.y = old.O2.y;
+        that.O4.x = old.O4.x;
+        that.O4.y = old.O4.y;
+        that.pA.x = old.pA.x;
+        that.pA.y = old.pA.y;
+        that.pB.x = old.pB.x;
+        that.pB.y = old.pB.y;
         
         that.omega2 = old.omega2;
         that.omega3 = old.omega3;
@@ -236,6 +236,8 @@ FourBar.prototype.create = function (config) {
     };
     
     // construction
+    that.pA = {x: null, y: null};
+    that.pB = {x: null, y: null};
     that.runPositionAnalysis();
     that.recalculatePoints();
     // that.runVelocityAnalysis();
