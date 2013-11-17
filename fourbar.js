@@ -9,7 +9,7 @@ FourBar.prototype.createRequiredParameters = [
 ];
 
 // a, b, c, d, e, theta2, theta5
-Plot.prototype.create = function (config) {
+FourBar.prototype.create = function (config) {
     "use strict";
     
     // check for required parameters
@@ -35,55 +35,43 @@ Plot.prototype.create = function (config) {
             sqrt = function (x) {
                 if (x < 0) { throw "sqrt(" + x + ")"; }
                 return Math.sqrt(x);
-            },
-            
-            cos = function (x) {
-                if (x < 0 || x > Math.PI*2) { throw "cos(" + x + ")"; }
-                return Math.cos(x);
-            },
-            
-            sin = function (x) {
-                if (x < 0 || x > Math.PI*2) { throw "sin(" + x + ")"; }
-                return Math.sin(x);
             };
     } else {
         var acos = Math.acos,
-            sqrt = Math.sqrt,
-            cos = Math.cos,
-            sin = Math.sin;
+            sqrt = Math.sqrt;
     }
+    
+    var cos = Math.cos,
+        sin = Math.sin,
 
-    var euclid = function (p1, p2) {
-        var dx = p1.x - p2.x,
-            dy = p1.y - p2.y;
-        return Math.sqrt(dx*dx + dy*dy);
-    }
+        euclid = function (p1, p2) {
+            var dx = p1.x - p2.x,
+                dy = p1.y - p2.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        },
+        
+        stateStack = [];
 
     // optional variables
     that.theta2 = config.theta2 || 0;
     that.omega2 = config.omega2 || 0;
+    that.alpha2 = config.alpha2 || 0;
     
     // public variables 
-    // note: none of these should be directly modified...
     that.a = config.a;
     that.b = config.b;
     that.c = config.c;
-    that.O2 = config.O2;
+    that.O2 = config.O2; 
     that.O4 = config.O4;
     
-    // more privates...
-    var zeta = Math.atan2(O4.y - O2.y, O4.x - O2.x);
-    
-    // public methods
-    
     // recalculates theta3 and theta4
-    // using a, b, c, d, and theta2
-    that.runPositionalAnalysis = function () {
+    // using a, b, c, theta2, O2, and O4
+    that.runPositionAnalysis = function () {
         // rename public variables to make math more concise
         var a = that.a,
             b = that.b,
             c = that.c,
-            d = that.d,
+            d = euclid(that.O2, that.O4),
             theta2 = that.theta2;
 
         // position analysis (using geometric method)
@@ -97,7 +85,7 @@ Plot.prototype.create = function (config) {
             var theta4 = Math.PI - (gamma - phi);
         }
 
-        var alpha = Math.acos((b * b + c * c - f * f)/(2 * b * c)),
+        var alpha = acos((b * b + c * c - f * f)/(2 * b * c)),
             theta3 = theta4 - alpha;
             
         // set public variables
@@ -106,17 +94,17 @@ Plot.prototype.create = function (config) {
     };
     
     // recalculates pA and pB 
-    // using a, b, c, d, theat2, theta3, theta4, O2, O4, and zeta
+    // using a, b, c, theat2, theta3, theta4, O2, and O4
     that.recalculatePoints = function () {
         var a = that.a,
             b = that.b,
             c = that.c,
-            d = that.d,
             theta2 = that.theta2,
-            theta3 = that.theta2,
-            theta4 = that.theta2,
+            theta3 = that.theta3,
+            theta4 = that.theta4,
             O2 = that.O2,
-            O4 = that.O4;
+            O4 = that.O4,
+            zeta = Math.atan2(O4.y - O2.y, O4.x - O2.x);
             
         that.pA = {
             x: O2.x + a * Math.cos(zeta + theta2),
@@ -131,10 +119,12 @@ Plot.prototype.create = function (config) {
         // consistency check
         var pB2 = {
             x: O4.x + c * Math.cos(zeta + theta4),
-            y: O4.x + c * Math.sin(zeta + theta4)
+            y: O4.y + c * Math.sin(zeta + theta4)
         };
         
-        if (pB2.x !== that.pB.x || pB2.y !== that.pB.y) {
+        if (Math.abs(pB2.x - that.pB.x) > 1e-6
+            || Math.abs(pB2.y - that.pB.y) > 1e-6) 
+        {
             throw "error: pB calculation check failed";
         }
     };
@@ -195,8 +185,58 @@ Plot.prototype.create = function (config) {
         that.alpha4 = (C * E - B * F)/(A * E - B * D);
     };
     
+    that.pushState = function () {
+        stateStack.push({
+            a: that.a,
+            b: that.b,
+            c: that.c,
+            
+            theta2: that.theta2,
+            theta3: that.theta3,
+            theta4: that.theta4,
+            
+            O2: {x: that.O2.x, y: that.O2.y},
+            O4: {x: that.O4.x, y: that.O4.y},
+            pA: {x: that.pA.x, y: that.pA.y},
+            pB: {x: that.pB.x, y: that.pB.y},
+            
+            omega2: that.omega2,
+            omega3: that.omega3,
+            omega4: that.omega4,
+            
+            alpha2: that.alpha2,
+            alpha3: that.alpha3,
+            alpha4: that.alpha4
+        });
+    };
+    
+    that.popState = function () {
+        var old = stateStack.pop();
+        
+        that.a = old.a;
+        that.b = old.b;
+        that.c = old.c;
+        
+        that.theta2 = old.theta2;
+        that.theta3 = old.theta3;
+        that.theta4 = old.theta4;
+        
+        that.O2 = old.O2;
+        that.O4 = old.O4;
+        that.pA = old.pA;
+        that.pB = old.pB;
+        
+        that.omega2 = old.omega2;
+        that.omega3 = old.omega3;
+        that.omega4 = old.omega4;
+        
+        that.alpha2 = old.alpha2;
+        that.alpha3 = old.alpha3;
+        that.alpha4 = old.alpha4;
+    };
+    
     // construction
-    that.runPositionalAnalysis();
+    that.runPositionAnalysis();
     that.recalculatePoints();
     // that.runVelocityAnalysis();
     // that.runAccelerationAnalysis();
