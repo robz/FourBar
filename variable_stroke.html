@@ -16,11 +16,6 @@ canvas {
 <h3>Variable-stroke mechanism</h3>
 adjust link lengths and positions using scrollbars below<br/>
 <div id="container"></div>
-<div id="fb1_a_input"></div>
-<div id="fb1_b_input"></div>
-<div id="fb1_c_input"></div>
-<div id="fb2_b_input"></div>
-<div id="fb2_c_input"></div>
 <div id="pivotLength_input"></div>
 <div id="pivotAngle_input"></div>
 <div id="pivotX_input"></div>
@@ -161,9 +156,9 @@ adjust link lengths and positions using scrollbars below<br/>
                 maxAngle = elem;
             }
         });
-        
-        document.getElementById("angleMag").innerHTML = maxAngle - minAngle;
-        document.getElementById("angleCenter").innerHTML = (minAngle + maxAngle)/2;
+
+        document.getElementById("angleMag").innerHTML = "magitude of output angle: " + (maxAngle - minAngle);
+        document.getElementById("angleCenter").innerHTML = "center angle of output oscilation: " + ((minAngle + maxAngle)/2);
     };
 
     
@@ -174,61 +169,6 @@ adjust link lengths and positions using scrollbars below<br/>
     var bars = [];
     
     var barData = [
-        {name:"fb1_a_input", min: 0, max: 100, startX: Math.abs(fb1.a), 
-        movedToCallback: function (x) {
-            var tmp = fb1.a;
-            fb1.a = x;
-
-            if (!calcPath(100)) {
-                fb1.a = tmp;
-                bars[0].bar.setPosition(tmp);
-            }
-        }},
-
-        {name:"fb1_b_input", min: 0, max: 100, startX: fb1.b,
-        movedToCallback: function (x) {
-            var tmp = fb1.b;
-            fb1.b = x;
-
-            if (!calcPath(100)) {
-                fb1.b = tmp;
-                bars[1].bar.setPosition(tmp);
-            }
-        }}, 
-
-        {name:"fb1_c_input", min: -100, max: 0, startX: fb1.c,
-        movedToCallback: function (x) {
-            var tmp = fb1.c;
-            fb1.c = x;
-
-            if (!calcPath(100)) {
-                fb1.c = tmp;
-                bars[2].bar.setPosition(tmp);
-            }
-        }}, 
-
-        {name:"fb2_b_input", min: 0, max: 100, startX: fb2.b,
-        movedToCallback: function (x) {
-            var tmp = fb2.b;
-            fb2.b = x;
-
-            if (!calcPath(100)) {
-                fb2.b = tmp;
-                bars[3].bar.setPosition(tmp);
-            }
-        }}, 
-
-        {name:"fb2_c_input", min: -100, max: 0, startX: fb2.c,
-        movedToCallback: function (x) {
-            var tmp = fb2.c;
-            fb2.c = x;
-
-            if (!calcPath(100)) {
-                fb2.c = tmp;
-                bars[4].bar.setPosition(tmp);
-            }
-        }},
-
         {name:"pivotAngle_input", min: 0, max: Math.PI*2, startX: pivotAngle,
         movedToCallback: function (x) {
             var tmpAngle = pivotAngle,
@@ -243,7 +183,7 @@ adjust link lengths and positions using scrollbars below<br/>
                 pivotAngle = tmpAngle;
                 fb1.O4.x = tmpX;
                 fb1.O4.y = tmpY;
-                bars[5].bar.setPosition(tmpAngle);
+                bars[0].bar.setPosition(tmpAngle);
             }
         }},
 
@@ -261,7 +201,7 @@ adjust link lengths and positions using scrollbars below<br/>
                 pivotLength = tmpLen;
                 fb1.O4.x = tmpX;
                 fb1.O4.y = tmpY;
-                bars[6].bar.setPosition(pivotLength);
+                bars[1].bar.setPosition(pivotLength);
             }
         }},
 
@@ -279,7 +219,7 @@ adjust link lengths and positions using scrollbars below<br/>
                 pivotPoint.x = tmpLen;
                 fb1.O4.x = tmpX;
                 fb1.O4.y = tmpY;
-                bars[7].bar.setPosition(pivotPoint.x);
+                bars[2].bar.setPosition(pivotPoint.x);
             }
         }},
 
@@ -297,7 +237,7 @@ adjust link lengths and positions using scrollbars below<br/>
                 pivotPoint.y = tmpLen;
                 fb1.O4.x = tmpX;
                 fb1.O4.y = tmpY;
-                bars[8].bar.setPosition(pivotPoint.y);
+                bars[3].bar.setPosition(pivotPoint.y);
             }
         }},
     ];
