@@ -45,31 +45,38 @@ adjust link lengths and positions using scrollbars below<br/>
             drawColor: "blue",
             backgroundColor: "lightGray"
             }),
-            
-        pivotPoint = {x: 30, y: 0},
-        pivotAngle = Math.PI/2*3,
-        pivotLength = 13.8,
-        
+
+        scalingFactor = 6.4,
+
+        pivotPoint = {
+            x:  -0.324864*scalingFactor, 
+            y: -4.343029*scalingFactor
+            },
+        pivotAngle = Math.PI/2,
+        pivotLength = 5.601562*scalingFactor,
+
         fb1 = new FourBar({
             a: 7.35, 
             b: 21.53, 
             c: -27.4, 
-            O2: {x: 0, y: 0},
+            O2: {x: -2.171875*scalingFactor, 
+                 y: -0.956250*scalingFactor},
             O4: {x: pivotPoint.x + pivotLength*Math.cos(pivotAngle), 
                  y: pivotPoint.y + pivotLength*Math.sin(pivotAngle)},
             useSafeMath: true
             }),
-        
+
         fb2 = new FourBar({
             a: 27.4,
             b: 75, 
             c: -31.88,
             O2: fb1.O4,
-            O4: {x: fb1.O4.x + 50, y: 0},
+            O4: {x: 8.921875*scalingFactor, 
+                 y: -2.171875*scalingFactor},
             theta2: Math.PI*2 - 2*Math.PI/3,
             useSafeMath: true
             }),
-        
+
         DT = 30;
 
 
@@ -128,7 +135,9 @@ adjust link lengths and positions using scrollbars below<br/>
                 fb1.theta2 = i * Math.PI * 2 / numPoints;
                 doMath();
                 points.push([fb2.pB.x, fb2.pB.y]);
-                angles.push(Math.atan2(fb2.pB.y - fb2.O4.y, fb2.pB.x - fb2.O4.x));
+                angles.push(Math.atan2(
+                    fb2.pB.y - fb2.O4.y, 
+                    fb2.pB.x - fb2.O4.x));
             }
         } catch (e) {
             return false;
