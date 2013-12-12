@@ -183,6 +183,7 @@ FourBar.prototype.create = function (config) {
         that.alpha4 = (C * E - B * F)/(A * E - B * D);
     };
     
+    // TODO: this could be smarter by accepting an optional parameter specifying what will change
     that.pushState = function () {
         stateStack.push({
             a: that.a,
