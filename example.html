@@ -14,12 +14,13 @@ canvas {
 }
 </style>
 <h3>Four-bar simulator</h3>
-adjust link lengths using scrollbars below<br/>
+click and drag gray area<br/>
 <div id="container"></div>
 <div id="a_input"></div>
 <div id="b_input"></div>
 <div id="c_input"></div>
-<div id="O4_input"></div>
+<div id="e_input"></div>
+<div id="theta5_input"></div>
 <script src="../plotjs/plot.js"></script>
 <script src="fourbar.js"></script>
 <script src="scrollbar.js"></script>
@@ -41,51 +42,26 @@ adjust link lengths using scrollbars below<br/>
             backgroundColor: "lightGray"
         }),
         
-        fb = new FourBar({
-            a: 1, 
-            b: 4, 
-            c: 3, 
-            O2: {x: 0, y: 0},
-            O4: {x: 3, y: -1},
-            useSafeMath: true
-            }),
+        DT = 30,
         
-        DT = 30;
-
-            
-    //
-    // Input scroll bars
-    //
+        blockHeight = 1,
+        blockWidth = 1.5,
+        
+        fb = createFourBar(1, 4, 3, 3, 6, 0, Math.PI + Math.PI / 6),
+        
+        optimizing = false;
     
-    var euclid = function (p1, p2) {
-        var dx = p1.x - p2.x,
-            dy = p1.y - p2.y;
-        return Math.sqrt(dx * dx + dy * dy);
-    };
+    plot.drawPoint(0, 0);
+    plot.pushBackground();
     
     var bars = [];
     
     [{name:"a_input", field: "a", min: 0, max: 10},
      {name:"b_input", field: "b", min: 0, max: 10}, 
-     {name:"c_input", field: "c", min: 0, max: 10},
-     {name:"O4_input", field: "O4", min: 0, max: 10, 
-        startX: euclid(fb.O2, fb.O4),
-        movedToCallback: function (v, bar) {
-            var zeta = Math.atan2(fb.O4.y - fb.O2.y, fb.O4.x - fb.O2.x),
-                tmp = fb.O4,
-                tmpd = euclid(fb.O2, fb.O4);
-
-            fb.O4 = {
-                x: fb.O2.x + v * Math.cos(zeta),
-                y: fb.O2.y + v * Math.sin(zeta)
-                };
-
-            if (!calcPath(100)) {
-                fb.O4 = tmp;
-                bar.setPosition(tmpd);
-            }
-        }}
-    ].forEach(function (elem, index) {
+     {name:"c_input", field: "c", min: 0, max: 10}, 
+     {name:"e_input", field: "e", min: 0, max: 15},
+     {name:"theta5_input", field: "theta5", min: 0, max: Math.PI*2}]
+    .forEach(function (elem, index) {
         bars[index] = {
             field: elem.field,
             bar: new ScrollBar({
@@ -94,19 +70,15 @@ adjust link lengths using scrollbars below<br/>
                 pixelHeight: 50,
                 minX: elem.min,
                 maxX: elem.max,
-                startX: elem.startX || fb[elem.field],
+                startX: fb[elem.field],
                 drawColor: "darkGray",
                 backgroundColor: "lightGray",
                 movedToCallback: function (x) {
-                    if (elem.movedToCallback) {
-                        elem.movedToCallback(x, bars[index].bar);
-                        return;
-                    }
-                
                     var tmp = fb[elem.field];
                     fb[elem.field] = x;
-                    
-                    if (!calcPath(100)) {
+                    try {
+                        calcPath();
+                    } catch (exception) {
                         fb[elem.field] = tmp;
                         bars[index].bar.setPosition(tmp);
                     }
@@ -115,34 +87,71 @@ adjust link lengths using scrollbars below<br/>
         };
     });
     
-    
-    // 
-    // Calculations...
-    //
-    
     var calcPath = function (numPoints) {
+        numPoints = numPoints || 100;
         var points = [];
         
-        fb.pushState();
-        
-        try {
-            for (var i = 0; i < numPoints; i++) {
-                fb.theta2 = i * Math.PI * 2 / numPoints;
-                fb.runPositionAnalysis();
-                fb.recalculatePoints();
-                points.push([fb.pB.x, fb.pB.y]);
-            }
-            
-        } catch (e) {
-            return false;
-        } finally {
-            fb.popState();
+        for (var i = 0; i < numPoints; i++) {
+            var theta2 = i * Math.PI * 2 / (numPoints);
+            fb.calcPositions(theta2);
+            points.push([fb.x5, fb.y5]);
         }
-
+        
         calcPath.latest = points;
         
-        return true;
+        return points;
     };
+    
+    var getPath = function () {
+        return calcPath.latest || calcPath();
+    };
+    
+    
+    //
+    // Mouse interaction
+    //
+    
+    var draggingBlock = false,
+        pressStartX = null,
+        
+        drawingGoalPath = false,
+        goalPath = null;
+    
+    plot.setMouseDown(function (x, y) {
+        if (x > fb.d - blockWidth/2 && x < fb.d + blockWidth/2 && 
+            y > -blockHeight/2 && y < blockWidth/2) 
+        {
+            draggingBlock = true;
+            pressStartX = x;
+        } else {
+            drawingGoalPath = true;
+            goalPath = [[x, y]];
+        }
+    });
+    
+    plot.setMouseUp(function (x, y) {
+        draggingBlock = false;
+        
+        if (drawingGoalPath) {
+            drawingGoalPath = false;
+            optimize(goalPath);
+        }
+    });
+    
+    plot.setMouseMove(function (x, y) {
+        if (draggingBlock) {
+            var deltaX = x - pressStartX;
+            fb.d += deltaX;
+            try {
+                calcPath();
+                pressStartX = x;
+            } catch (e) {
+                fb.d -= deltaX;
+            }
+        } else if (drawingGoalPath) {
+            goalPath.push([x, y]);
+        }
+    });
     
     
     // 
@@ -150,41 +159,192 @@ adjust link lengths using scrollbars below<br/>
     //
     
     var drawFourBarPositions = function () {
-        plot.drawPoint(fb.O2.x, fb.O2.y);
-        plot.drawPoint(fb.O4.x, fb.O4.y);
-        plot.drawPoint(fb.pA.x, fb.pA.y);
-        plot.drawPoint(fb.pB.x, fb.pB.y);
-        plot.drawLine(fb.O2.x, fb.O2.y, fb.pA.x, fb.pA.y);
-        plot.drawLine(fb.pA.x, fb.pA.y, fb.pB.x, fb.pB.y);
-        plot.drawLine(fb.pB.x, fb.pB.y, fb.O4.x, fb.O4.y);
-        plot.drawLine(fb.O4.x, fb.O4.y, fb.O2.x, fb.O2.y);
+        plot.drawRect(fb.d - blockWidth/2, -blockHeight/2, blockWidth, blockHeight, 
+            {drawColor:"gray"});
+        plot.drawPoint(fb.d, 0);
+        plot.drawLine(0, 0, fb.d, 0);
+        
+        plot.drawPoint(fb.x2, fb.y2, {drawColor:"green"});
+        plot.drawLine(0, 0, fb.x2, fb.y2);
+        
+        plot.drawPoint(fb.x3, fb.y3, {drawColor:"green"});
+        plot.drawLine(fb.x2, fb.y2, fb.x3, fb.y3, {drawColor:"green"});
+        plot.drawLine(fb.x3, fb.y3, fb.d, 0);
+        
+        plot.drawPoint(fb.x5, fb.y5, {drawColor:"green"});
+        plot.drawLine(fb.x3, fb.y3, fb.x5, fb.y5, {drawColor:"green"});
+        
+        plot.drawLine(fb.x2, fb.y2, fb.x5, fb.y5, {drawColor:"green"});
+    };
+
+    var drawFourBarVelocities = function () {
+        [{theta: fb.theta2, r: fb.a, omega: fb.omega2, x: 0, y: 0},
+         {theta: fb.theta3, r: fb.b/2, omega: fb.omega3, x: fb.x2, y: fb.y2},
+         {theta: fb.theta4, r: fb.c/2, omega: fb.omega4, x: fb.d, y: 0}].forEach(
+        function (e) {
+            var thetab = e.theta + e.omega*1000,
+                xb = e.x + e.r*Math.cos(thetab),
+                yb = e.y + e.r*Math.sin(thetab);
+
+            plot.drawArc(e.x, e.y, e.r, e.theta, thetab, e.omega < 0, {drawColor:"black"});
+            plot.drawArrowHead(xb, yb, thetab + Math.PI/2*((e.omega < 0) ? -1 : 1), {drawColor:"black"});
+        });
     };
     
-    var iteration = (function () {
+    setInterval(
+    (function () {
         var count = 0,
             maxCount = 200,
             speed = 2;
-
+    
         return function () {
-            fb.theta2 = count * Math.PI * 2 / maxCount;
+            var theta2 = count * Math.PI * 2 / maxCount;
             
-            fb.runPositionAnalysis();
-            fb.recalculatePoints();
+            fb.calcPositions(theta2);
+            fb.calcVelocities((Math.PI*2)/((maxCount/speed)*DT));
             
             plot.restoreToBackground();
             drawFourBarPositions();
-            
-            if (!calcPath.latest) {
-                calcPath(100);
+            if (!optimizing) {
+                drawFourBarVelocities();
             }
             
-            plot.drawPath(calcPath.latest, {drawColor:"red"});
+            plot.drawPath(getPath(), {drawColor:"red"});
             
-            count = (count + speed)%maxCount;
+            if (goalPath) {
+                plot.drawPath(goalPath, {drawColor:"black"});
+            }
+
+            if (!optimizing) {
+                count = (count + speed) % maxCount;
+            }
         }
-    })();
+    })()
+    , DT);
     
-    setInterval(iteration, DT);
+    
+    //
+    // Gradient optimization
+    //
+    
+    var calcCenter = function (path) {
+        var pathcx = 0,
+            pathcy = 0;
+        
+        path.forEach(function (e) {
+            pathcx += e[0];
+            pathcy += e[1];
+        });
+        
+        return [pathcx / path.length,
+                pathcy / path.length];
+    };
+    
+    var euclid = function (p1, p2) {
+        var dx = p1[0] - p2[0],
+            dy = p1[1] - p2[1];
+
+        return Math.sqrt(dx*dx + dy*dy);
+    };
+    
+    var calcPathMinDiff = function (path1, path2) {
+        var error = 0;
+        
+        for (var i = 0; i < path1.length; i++) {
+            var minErr = 1e100;
+        
+            for (var j = 0; j < path2.length; j++) {
+                var err = euclid(path1[i], path2[j]);
+                
+                if (err < minErr) {
+                    minErr = err;
+                }
+            }
+            
+            error += minErr;
+        }
+        
+        return error;
+    };
+        
+    var calcError = function () {
+        var path = calcPath();
+        
+        var centerErr = euclid(calcCenter(path), calcCenter(goalPath)),
+            goalPathErr = calcPathMinDiff(goalPath, path),
+            curPathErr = calcPathMinDiff(path, goalPath);
+        
+        return 100*goalPathErr + 10*centerErr + curPathErr;
+    };
+    
+    var optimize = function () {
+        var prevError = 1e1000;
+        var scale = 10;
+        
+        var choices = [
+            {name:"a", mutate:scale*.01},
+            {name:"b", mutate:scale*.01},
+            {name:"c", mutate:scale*.01},
+            {name:"d", mutate:scale*.01},
+            {name:"e", mutate:scale*.01},
+            {name:"theta5", mutate:Math.PI*2/100}];
+            
+        optimizing = true;    
+        
+        (function f() {
+            if (drawingGoalPath) return;
+        
+            var lowestError = 1e100;
+            var bestElements = null;
+            
+            var flag = true;
+            
+            for (var i = 0; i < Math.pow(3,choices.length); i++) {
+                fb.save();
+                var elements = fb.copyElements();
+            
+                var p = 1;
+                var noaction = true;
+                for (var j = 0; j < choices.length; j++) {
+                    var choice = Math.floor(i/p)%3;
+                    if (choice === 0) {
+                        elements[choices[j].name] += choices[j].mutate;
+                        noaction = false;
+                    } else if (choice === 1) {
+                        elements[choices[j].name] -= choices[j].mutate;
+                        noaction = false;
+                    }
+                    p*=3;
+                }
+                
+                fb.setElements(elements);
+                
+                try {
+                    var error = calcError();
+                    
+                    if (error < lowestError) {
+                        bestElements = elements;
+                        lowestError = error;
+                        flag = noaction;
+                    }
+                } catch (ex) {};
+                
+                fb.restore();
+            }
+            
+            fb.setElements(bestElements);
+            
+            bars.forEach(function (elem) {
+                elem.bar.setPosition(fb[elem.field]);
+            });
+            
+            if (!flag) {
+                setTimeout(f, 50);
+            } else {
+                optimizing = false;
+            }
+        })();
+    };
 }());
 </script>
 </html>

@@ -20,6 +20,8 @@ adjust link lengths using scrollbars below<br/>
 <div id="b_input"></div>
 <div id="c_input"></div>
 <div id="O4_input"></div>
+<div id="leg_distance"></div>
+<div id="leg_angle"></div>
 <script src="../plotjs/plot.js"></script>
 <script src="fourbar.js"></script>
 <script src="scrollbar.js"></script>
@@ -42,15 +44,17 @@ adjust link lengths using scrollbars below<br/>
         }),
         
         fb = new FourBar({
-            a: 1, 
-            b: 4, 
-            c: 3, 
+            a: 1.66, 
+            b: 3.82, 
+            c: 5.2, 
             O2: {x: 0, y: 0},
-            O4: {x: 3, y: -1},
+            O4: {x: 6, y: -2},
             useSafeMath: true
             }),
         
-        DT = 30;
+        DT = 30,
+        legDistance = 7.25,
+        legAngle = 4.0;
 
             
     //
@@ -115,32 +119,48 @@ adjust link lengths using scrollbars below<br/>
         };
     });
     
+    new ScrollBar({
+        container: "leg_angle",
+        pixelWidth: 500,
+        pixelHeight: 30,
+        minX: 0,
+        maxX: Math.PI*2,
+        startX: legAngle,
+        drawColor: "darkGray",
+        backgroundColor: "lightGray",
+        movedToCallback: function (x) { 
+            legAngle = x; 
+            calcPath(100);
+        }
+    });
+    
+    new ScrollBar({
+        container: "leg_distance",
+        pixelWidth: 500,
+        pixelHeight: 30,
+        minX: 0,
+        maxX: 10,
+        startX: legDistance,
+        drawColor: "darkGray",
+        backgroundColor: "lightGray",
+        movedToCallback: function (x) { 
+            legDistance = x; 
+            calcPath(100);
+        }
+    });
     
     // 
     // Calculations...
     //
     
     var calcPath = function (numPoints) {
-        var points = [];
+        var points = fb.calcPath(numPoints, fb.pA, fb.pB, legAngle, legDistance);
         
-        fb.pushState();
-        
-        try {
-            for (var i = 0; i < numPoints; i++) {
-                fb.theta2 = i * Math.PI * 2 / numPoints;
-                fb.runPositionAnalysis();
-                fb.recalculatePoints();
-                points.push([fb.pB.x, fb.pB.y]);
-            }
-            
-        } catch (e) {
+        if (!points) {
             return false;
-        } finally {
-            fb.popState();
         }
-
+            
         calcPath.latest = points;
-        
         return true;
     };
     
@@ -158,6 +178,14 @@ adjust link lengths using scrollbars below<br/>
         plot.drawLine(fb.pA.x, fb.pA.y, fb.pB.x, fb.pB.y);
         plot.drawLine(fb.pB.x, fb.pB.y, fb.O4.x, fb.O4.y);
         plot.drawLine(fb.O4.x, fb.O4.y, fb.O2.x, fb.O2.y);
+        
+        var phi = Math.atan2(fb.pB.y - fb.pA.y, fb.pB.x - fb.pA.x),
+            x = fb.pB.x + legDistance * Math.cos(legAngle + phi),
+            y = fb.pB.y + legDistance * Math.sin(legAngle + phi);
+                
+        plot.drawPoint(x, y);
+        plot.drawLine(fb.pA.x, fb.pA.y, x, y);
+        plot.drawLine(fb.pB.x, fb.pB.y, x, y);
     };
     
     var iteration = (function () {

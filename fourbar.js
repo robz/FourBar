@@ -52,7 +52,7 @@ FourBar.prototype.create = function (config) {
         
         stateStack = [];
 
-    // optional variables
+    // optional parameters
     that.theta2 = config.theta2 || 0;
     that.omega2 = config.omega2 || 0;
     that.alpha2 = config.alpha2 || 0;
@@ -63,6 +63,8 @@ FourBar.prototype.create = function (config) {
     that.c = config.c;
     that.O2 = config.O2; 
     that.O4 = config.O4;
+    that.pA = null;
+    that.pB = null;
     
     // recalculates theta3 and theta4
     // using a, b, c, theta2, O2, and O4
@@ -237,6 +239,32 @@ FourBar.prototype.create = function (config) {
         that.alpha2 = old.alpha2;
         that.alpha3 = old.alpha3;
         that.alpha4 = old.alpha4;
+    };
+    
+    that.calcPath = function (numPoints, p1, p2, angle, distance) {
+        var points = [];
+        
+        that.pushState();
+        
+        try {
+            for (var i = 0; i < numPoints; i++) {
+                that.theta2 = i * Math.PI * 2 / numPoints;
+                that.runPositionAnalysis();
+                that.recalculatePoints();
+                
+                var phi = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+                var x = p2.x + distance * Math.cos(angle + phi);
+                var y = p2.y + distance * Math.sin(angle + phi);
+                
+                points.push([x, y]);
+            }
+        } catch (e) {
+            return null;
+        } finally {
+            that.popState();
+        }
+
+        return points;
     };
     
     // construction
