@@ -1,0 +1,3 @@
+[submodule "plotjs"]
+	path = plotjs
+	url = https://github.com/robz/plotjs.git
