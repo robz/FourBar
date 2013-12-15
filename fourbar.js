@@ -28,7 +28,7 @@ FourBar.prototype.create = function (config) {
     // privates
     if (config.useSafeMath) {
         var acos = function (x) {
-                if (x > 1 || x < -1) { throw "acos(" + x + ")"; }
+                if (x > 1 + 1e-6 || x < -1 - 1e-6) { throw "acos(" + x + ")"; }
                 return Math.acos(x);
             },
             
@@ -185,7 +185,7 @@ FourBar.prototype.create = function (config) {
     
     // TODO: this could be smarter by accepting an optional parameter specifying what will change
     that.pushState = function () {
-        stateStack.push({
+        var state = {
             a: that.a,
             b: that.b,
             c: that.c,
@@ -206,14 +206,18 @@ FourBar.prototype.create = function (config) {
             alpha2: that.alpha2,
             alpha3: that.alpha3,
             alpha4: that.alpha4
-        });
+        };
+    
+        stateStack.push(state);
+        
+        return state;
     };
     
     that.popState = function (ignoreState) {
         var old = stateStack.pop();
         
         if (ignoreState) {
-            return;
+            return old;
         }
         
         that.a = old.a;
@@ -240,6 +244,8 @@ FourBar.prototype.create = function (config) {
         that.alpha2 = old.alpha2;
         that.alpha3 = old.alpha3;
         that.alpha4 = old.alpha4;
+        
+        return old;
     };
     
     that.calcPath = function (numPoints, p1, p2, angle, distance) {

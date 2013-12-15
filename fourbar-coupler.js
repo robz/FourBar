@@ -26,7 +26,9 @@ FourBarCoupler.prototype.create = function (config) {
     
     // parent functions
     var parent = {
-        recalculatePoints: that.recalculatePoints
+        recalculatePoints: that.recalculatePoints,
+        pushState: that.pushState,
+        popState: that.popState
     };
     
     // public variables 
@@ -34,6 +36,26 @@ FourBarCoupler.prototype.create = function (config) {
     that.legAngle = config.legAngle;
     that.legPoint = null;
     that.cachedLegPath = null;
+    
+    //
+    // private functions
+    //
+
+    var euclid = function (p1, p2) {
+        var dx = p1.x - p2.x,
+            dy = p1.y - p2.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    };
+    
+    var grashofCondition = function () {
+        var arr = [that.a, that.b, that.c, euclid(that.O2, that.O4)];
+        arr.sort();
+        return arr[0] + arr[3] <= arr[1] + arr[2];
+    };
+    
+    //
+    // public methods
+    //
     
     // recalculates pA, pB, legPoint
     // using a, b, c, theat2, theta3, theta4, O2, O4, legLength, and legAngle
@@ -45,7 +67,26 @@ FourBarCoupler.prototype.create = function (config) {
         that.legPoint.y = that.pB.y + that.legLength * Math.sin(that.legAngle + phi);  
     };
     
+    that.pushState = function () {
+        var state = parent.pushState.call(that);
+        state.legPoint = {x: that.legPoint.x, y: that.legPoint.y};
+        state.legLength = that.legLength;
+        state.legAngle = that.legAngle;
+    }
+    
+    that.popState = function () {
+        var old = parent.popState.call(that);
+        that.legPoint.x = old.legPoint.x;
+        that.legPoint.y = old.legPoint.y;
+        that.legLength = old.legLength;
+        that.legAngle = old.legAngle;
+    }
+    
     that.calcLegPath = function (numPoints) {
+        if (!grashofCondition()) {
+            return null;
+        }
+        
         var points = [];
         
         that.pushState();
