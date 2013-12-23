@@ -52,7 +52,7 @@ click and drag mouse on panel to draw desired motion<br/>
             O4: {x: 6, y: 0},
             legLength: 7.25,
             legAngle: 4.0,
-            useSafeMath: true
+            useSafeMath: false
             }),
         
         DT = 30;
@@ -131,7 +131,7 @@ click and drag mouse on panel to draw desired motion<br/>
     };
         
     var calcError = function () {
-        var path = fb.calcLegPath(100);
+        var path = fb.calcLegPath(1000);
         
         var centerErr = euclid(calcCenter(path), calcCenter(goalPath)),
             goalPathErr = calcPathMinDiff(goalPath, path),
@@ -142,14 +142,14 @@ click and drag mouse on panel to draw desired motion<br/>
     
     var optimize = function () {
         var prevError = 1e1000;
-        var scale = 10;
+        var scale = 5;
         
         var choices = [
             {name:"a", mutate:scale*.01},
             {name:"b", mutate:scale*.01},
             {name:"c", mutate:scale*.01},
             {name:"legLength", mutate:scale*.01},
-            {name:"legAngle", mutate:Math.PI*2/1000},
+            {name:"legAngle", mutate:Math.PI*2/100},
             {name:"O4x", mutate:scale*.01}];
             
         optimizing = true;    
@@ -164,7 +164,7 @@ click and drag mouse on panel to draw desired motion<br/>
             
             var tmpDistance, tmpAngle;
             
-            for (var i = 0; i < Math.pow(3, choices.length); i++) {
+            for (var i = 0; i < choices.length*3; i++) {
                 fb.pushState();
                 
                 var elements = {
@@ -176,18 +176,17 @@ click and drag mouse on panel to draw desired motion<br/>
                     legAngle: fb.legAngle,
                 };
             
-                var p = 1;
-                var noaction = true;
-                for (var j = 0; j < choices.length; j++) {
-                    var choice = Math.floor(i/p)%3;
-                    if (choice === 0) {
-                        elements[choices[j].name] += choices[j].mutate;
-                        noaction = false;
-                    } else if (choice === 1) {
-                        elements[choices[j].name] -= choices[j].mutate;
-                        noaction = false;
-                    }
-                    p*=3;
+                var noaction = (i%3) == 0;
+                var j = Math.floor(i/3);
+                switch (i%3) {
+                    case 0:
+                        break;
+                    case 1:
+                        elements[choices[j].name] += choices[j].mutate*Math.random();
+                        break;
+                    case 2:
+                        elements[choices[j].name] -= choices[j].mutate*Math.random();
+                        break;
                 }
                 
                 fb.a = elements.a;
@@ -220,7 +219,7 @@ click and drag mouse on panel to draw desired motion<br/>
             if (done || drawingGoalPath) {
                 optimizing = false;
             } else {
-                setTimeout(f, 50);
+                setTimeout(f, 10);
             }
         })();
     };
@@ -248,13 +247,13 @@ click and drag mouse on panel to draw desired motion<br/>
         var count = 0,
             maxCount = 200,
             speed = 2;
-            
-        fb.calcLegPath(100);
 
         return function () {
             if (!optimizing) {
                 fb.theta2 = count * Math.PI * 2 / maxCount;
                 count = (count + speed)%maxCount;
+            
+                fb.calcLegPath(100);
             }
             
             fb.runPositionAnalysis();

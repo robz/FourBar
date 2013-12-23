@@ -1,0 +1,79 @@
+<html>
+<style>
+body {
+    text-align: center;
+}
+
+canvas {
+    margin: 1px 0px 0px 0px;
+    padding: 0px 0px 0px 0px;
+}
+</style>
+<div id="container1"></div>
+<div id="container2"></div>
+<script src="plotjs/plot.js"></script>
+<script src="fourbar.js"></script>
+<script src="fourbar-coupler.js"></script>
+<script src="fourbar-coupler-animator.js"></script>
+<script>
+(function () {
+    "use strict";
+
+    new FourBarCouplerAnimator({
+        plot: new Plot({
+            container: "container1",
+            pixelWidth: 200,
+            pixelHeight: 200,
+            minX: -3,
+            maxX: 9,
+            minY: -6,
+            maxY: 6,
+            pointRadius: 0.2,
+            lineWidth: 0.1,
+            drawColor: "blue",
+            backgroundColor: "lightGray"
+            }),
+        fourBar: new FourBarCoupler({
+            a: 1.66, 
+            b: 3.82, 
+            c: 5.2, 
+            O2: {x: 0, y: 0},
+            O4: {x: 6, y: 0},
+            legLength: 7.25,
+            legAngle: 4.0,
+            useSafeMath: true
+            }),
+        inputSpeed: 3,
+        framesPerSecond: 30
+        });
+    
+    new FourBarCouplerAnimator({
+        plot: new Plot({
+            container: "container2",
+            pixelWidth: 300,
+            pixelHeight: 200,
+            minX: -8,
+            maxX: 10,
+            minY: -6,
+            maxY: 6,
+            pointRadius: 0.2,
+            lineWidth: 0.1,
+            drawColor: "blue",
+            backgroundColor: "lightGray"
+            }),
+        fourBar: new FourBarCoupler({
+            a: 6, 
+            b: 5, 
+            c: 5, 
+            O2: {x: 0, y: 0},
+            O4: {x: 3, y: 0},
+            legLength: 5,
+            legAngle: 256*Math.PI/180,
+            useSafeMath: true
+            }),
+        inputSpeed: 1,
+        framesPerSecond: 30
+        });
+})();
+</script>
+</html>
