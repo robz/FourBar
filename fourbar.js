@@ -123,7 +123,7 @@ FourBar.prototype.create = function (config) {
         if (Math.abs(pB2.x - that.pB.x) > 1e-6
             || Math.abs(pB2.y - that.pB.y) > 1e-6) 
         {
-            throw "error: pB calculation check failed";
+            //throw "error: pB calculation check failed";
         }
     };
     

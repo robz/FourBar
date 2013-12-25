@@ -72,14 +72,21 @@ FourBarCoupler.prototype.create = function (config) {
         state.legPoint = {x: that.legPoint.x, y: that.legPoint.y};
         state.legLength = that.legLength;
         state.legAngle = that.legAngle;
+        return state;
     }
     
-    that.popState = function () {
-        var old = parent.popState.call(that);
+    that.popState = function (ignoreState) {
+        var old = parent.popState.call(that, ignoreState);
+        
+        if (ignoreState) {
+            return old;
+        }
+        
         that.legPoint.x = old.legPoint.x;
         that.legPoint.y = old.legPoint.y;
         that.legLength = old.legLength;
         that.legAngle = old.legAngle;
+        return old;
     }
     
     that.calcLegPath = function (numPoints) {

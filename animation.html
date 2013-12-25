@@ -11,10 +11,14 @@ canvas {
 </style>
 <div id="container1"></div>
 <div id="container2"></div>
+<div id="container3"></div>
+<div id="container4"></div>
 <script src="plotjs/plot.js"></script>
 <script src="fourbar.js"></script>
 <script src="fourbar-coupler.js"></script>
 <script src="fourbar-coupler-animator.js"></script>
+<script src="fivebar-coupIer.js"></script>
+<script src="fivebar-coupler-animator.js"></script>
 <script>
 (function () {
     "use strict";
@@ -72,6 +76,64 @@ canvas {
             useSafeMath: true
             }),
         inputSpeed: 1,
+        framesPerSecond: 30
+        });
+    
+    new FourBarCouplerAnimator({
+        plot: new Plot({
+            container: "container3",
+            pixelWidth: 250,
+            pixelHeight: 200,
+            minX: -3,
+            maxX: 12,
+            minY: -3,
+            maxY: 9,
+            pointRadius: 0.2,
+            lineWidth: 0.1,
+            drawColor: "blue",
+            backgroundColor: "lightGray"
+            }),
+        fourBar: new FourBarCoupler({
+            a: 2.11, 
+            b: 5.61, 
+            c: 5.18, 
+            O2: {x: 0, y: 0},
+            O4: {x: 4.72, y: 0},
+            legLength: 6.44,
+            legAngle: 5.02,
+            useSafeMath: true
+            }),
+        inputSpeed: 3,
+        framesPerSecond: 30
+        });
+    
+    new FiveBarCouplerAnimator({
+        plot: new Plot({
+            container: "container4",
+            pixelWidth: 250,
+            pixelHeight: 200,
+            minX: -3,
+            maxX: 12,
+            minY: -3,
+            maxY: 9,
+            pointRadius: 0.2,
+            lineWidth: 0.1,
+            drawColor: "blue",
+            backgroundColor: "lightGray"
+            }),
+        fiveBarCoupler: new FiveBarCoupler({
+            a: 2, 
+            b: 6, 
+            c: 6, 
+            f: 2, 
+            O2: {x: 0, y: 0},
+            O6: {x: 6, y: 0},
+            legLength: 0,
+            legAngle: 0,
+            useSafeMath: true
+            }),
+        inputSpeed1: 1,
+        inputSpeed2: 1,
         framesPerSecond: 30
         });
 })();
