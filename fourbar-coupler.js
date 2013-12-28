@@ -40,17 +40,17 @@ FourBarCoupler.prototype.create = function (config) {
     //
     // private functions
     //
-
-    var euclid = function (p1, p2) {
-        var dx = p1.x - p2.x,
-            dy = p1.y - p2.y;
-        return Math.sqrt(dx * dx + dy * dy);
-    };
     
     var grashofCondition = function () {
         var arr = [that.a, that.b, that.c, euclid(that.O2, that.O4)];
         arr.sort();
         return arr[0] + arr[3] <= arr[1] + arr[2];
+    };
+    
+    var euclid = function (p1, p2) {
+        var dx = p1.x - p2.x,
+            dy = p1.y - p2.y;
+        return Math.sqrt(dx * dx + dy * dy);
     };
     
     //

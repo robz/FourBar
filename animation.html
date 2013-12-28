@@ -9,6 +9,7 @@ canvas {
     padding: 0px 0px 0px 0px;
 }
 </style>
+    <h1>Interesting fourbars</h1>
 <div id="container1"></div>
 <div id="container2"></div>
 <div id="container3"></div>
@@ -53,7 +54,7 @@ canvas {
     
     new FourBarCouplerAnimator({
         plot: new Plot({
-            container: "container2",
+            container: "container1",
             pixelWidth: 300,
             pixelHeight: 200,
             minX: -8,
@@ -81,7 +82,7 @@ canvas {
     
     new FourBarCouplerAnimator({
         plot: new Plot({
-            container: "container3",
+            container: "container1",
             pixelWidth: 250,
             pixelHeight: 200,
             minX: -3,
@@ -94,22 +95,22 @@ canvas {
             backgroundColor: "lightGray"
             }),
         fourBar: new FourBarCoupler({
-            a: 2.11, 
-            b: 5.61, 
-            c: 5.18, 
+            a: 2.2382, 
+            b: 5.6181, 
+            c: 5.2837, 
             O2: {x: 0, y: 0},
-            O4: {x: 4.72, y: 0},
-            legLength: 6.44,
-            legAngle: 5.02,
+            O4: {x: 4.6183, y: 0},
+            legLength: 5.912,
+            legAngle: 4.9232,
             useSafeMath: true
             }),
         inputSpeed: 3,
         framesPerSecond: 30
         });
     
-    new FiveBarCouplerAnimator({
+    new FourBarCouplerAnimator({
         plot: new Plot({
-            container: "container4",
+            container: "container1",
             pixelWidth: 250,
             pixelHeight: 200,
             minX: -3,
@@ -121,19 +122,17 @@ canvas {
             drawColor: "blue",
             backgroundColor: "lightGray"
             }),
-        fiveBarCoupler: new FiveBarCoupler({
-            a: 2, 
-            b: 6, 
-            c: 6, 
-            f: 2, 
+        fourBar: new FourBarCoupler({
+            a: 2.694, 
+            b: 3.27, 
+            c: 4.342, 
             O2: {x: 0, y: 0},
-            O6: {x: 6, y: 0},
-            legLength: 0,
-            legAngle: 0,
+            O4: {x: 4.7845, y: 0},
+            legLength: 2.41,
+            legAngle: 1.498,
             useSafeMath: true
             }),
-        inputSpeed1: 1,
-        inputSpeed2: 1,
+        inputSpeed: 3,
         framesPerSecond: 30
         });
 })();

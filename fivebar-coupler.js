@@ -33,15 +33,34 @@ FiveBarCoupler.prototype.create = function (config) {
     
     // parent functions
         parent = {
+            runPositionAnalysis: that.runPositionAnalysis,
             recalculatePoints: that.recalculatePoints,
             pushState: that.pushState,
             popState: that.popState
+        },
+        
+    // privates
+        euclid = function (p1, p2) {
+            var dx = p1.x - p2.x,
+                dy = p1.y - p2.y;
+            return Math.sqrt(dx * dx + dy * dy);
         };
     
     // public members
     that.f = config.f;
     that.O6 = config.O6;
     that.theta6 = theta6;
+    
+    that.runPositionAnalysis = function () {
+        var a = euclid(that.O2, that.O4),
+            b = euclid(that.O2, that.O6),
+            c = euclid(that.O4, that.O6),
+            phi = Math.acos((a * a + b * b - c * c) / (2 * a * b));
+        
+        that.theta2 = that.theta2 + phi;
+        
+        parent.runPositionAnalysis.call(that);
+    };
     
     // recalculates O4
     // using O6, f, and theta6
@@ -75,6 +94,32 @@ FiveBarCoupler.prototype.create = function (config) {
         that.theta6 = old.theta6;
         
         return old;
+    };
+    
+    that.calcLegPath = function (numPoints, w2, w6) {
+        var points = [],
+            i;
+        
+        that.pushState();
+        
+        try {
+            for (i = 0; i < numPoints; i += 1) {
+                that.theta2 = i * Math.PI * 2 / numPoints;
+                that.theta6 = that.theta2 * w6 / w2;
+                that.runPositionAnalysis();
+                that.recalculatePoints();
+                
+                points.push([that.legPoint.x, that.legPoint.y]);
+            }
+        } catch (e) {
+            return null;
+        } finally {
+            that.popState();
+        }
+        
+        that.cachedLegPath = points;
+
+        return points;
     };
 
     // actual construction
