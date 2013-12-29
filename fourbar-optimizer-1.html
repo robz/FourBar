@@ -1,0 +1,276 @@
+<html>
+<style>
+body {
+    text-align: center;
+}
+
+.configinput {
+    width: 30px;
+}
+
+canvas {
+    margin: 1px 0px 0px 0px;
+    padding: 0px 0px 0px 0px;
+}
+</style>
+<h3>Four-bar simulator</h3>
+click and drag mouse on panel to draw desired motion<br/>
+<div id="container"></div>
+<div id="a_input"></div>
+<div id="b_input"></div>
+<div id="c_input"></div>
+<div id="O4_input"></div>
+<div id="leg_distance"></div>
+<div id="leg_angle"></div>
+<script src="plotjs/plot.js"></script>
+<script src="fourbar-coupler.js"></script>
+<script src="fourbar.js"></script>
+<script src="scrollbar.js"></script>
+<script>
+(function () {
+    "use strict";
+
+    var plot = new Plot({
+            container: "container",
+            pixelWidth: 500,
+            pixelHeight: 400,
+            minX: -8,
+            maxX: 12,
+            minY: -10,
+            maxY: 8,
+            pointRadius: 0.2,
+            lineWidth: 0.1,
+            drawColor: "blue",
+            backgroundColor: "lightGray"
+        }),
+        
+        fb = new FourBarCoupler({
+            a: 1.66, 
+            b: 3.82, 
+            c: 5.2, 
+            O2: {x: 0, y: 0},
+            O4: {x: 6, y: 0},
+            legLength: 7.25,
+            legAngle: 4.0,
+            useSafeMath: false
+            }),
+        
+        DT = 30;
+    
+    
+    //
+    // Mouse interaction
+    //
+    
+    var drawingGoalPath = false,
+        goalPath = null;
+    
+    plot.setMouseDown(function (x, y) {
+        drawingGoalPath = true;
+        goalPath = [[x, y]];
+    });
+    
+    plot.setMouseUp(function (x, y) {
+        if (drawingGoalPath) {
+            drawingGoalPath = false;
+            optimize(goalPath);
+        }
+    });
+    
+    plot.setMouseMove(function (x, y) {
+        if (drawingGoalPath) {
+            goalPath.push([x, y]);
+        }
+    });
+    
+    
+    //
+    // Gradient descent optimization
+    //
+    
+    var optimizing = false;
+    
+    var calcCenter = function (path) {
+        var pathcx = 0,
+            pathcy = 0;
+        
+        path.forEach(function (e) {
+            pathcx += e[0];
+            pathcy += e[1];
+        });
+        
+        return [pathcx / path.length,
+                pathcy / path.length];
+    };
+    
+    var euclid = function (p1, p2) {
+        var dx = p1[0] - p2[0],
+            dy = p1[1] - p2[1];
+
+        return Math.sqrt(dx*dx + dy*dy);
+    };
+    
+    var calcPathMinDiff = function (path1, path2) {
+        var error = 0;
+        
+        for (var i = 0; i < path1.length; i++) {
+            var minErr = 1e100;
+        
+            for (var j = 0; j < path2.length; j++) {
+                var err = euclid(path1[i], path2[j]);
+                
+                if (err < minErr) {
+                    minErr = err;
+                }
+            }
+            
+            error += minErr;
+        }
+        
+        return error;
+    };
+        
+    var calcError = function () {
+        var path = fb.calcLegPath(1000);
+        
+        var centerErr = euclid(calcCenter(path), calcCenter(goalPath)),
+            goalPathErr = calcPathMinDiff(goalPath, path),
+            curPathErr = calcPathMinDiff(path, goalPath);
+        
+        return 100*goalPathErr + 10*centerErr + curPathErr;
+    };
+    
+    var optimize = function () {
+        var prevError = 1e1000;
+        var scale = 5;
+        
+        var choices = [
+            {name:"a", mutate:scale*.01},
+            {name:"b", mutate:scale*.01},
+            {name:"c", mutate:scale*.01},
+            {name:"legLength", mutate:scale*.01},
+            {name:"legAngle", mutate:Math.PI*2/100},
+            {name:"O4x", mutate:scale*.01}];
+            
+        optimizing = true;    
+        
+        (function f() {
+            if (drawingGoalPath) return;
+        
+            var lowestError = 1e100;
+            var bestElements = null;
+            
+            var done = true;
+            
+            var tmpDistance, tmpAngle;
+            
+            for (var i = 0; i < choices.length*3; i++) {
+                fb.pushState();
+                
+                var elements = {
+                    a: fb.a,
+                    b: fb.b,
+                    c: fb.c,
+                    O4x: fb.O4.x,
+                    legLength: fb.legLength,
+                    legAngle: fb.legAngle,
+                };
+            
+                var noaction = (i%3) == 0;
+                var j = Math.floor(i/3);
+                switch (i%3) {
+                    case 0:
+                        break;
+                    case 1:
+                        elements[choices[j].name] += choices[j].mutate*Math.random();
+                        break;
+                    case 2:
+                        elements[choices[j].name] -= choices[j].mutate*Math.random();
+                        break;
+                }
+                
+                fb.a = elements.a;
+                fb.b = elements.b;
+                fb.c = elements.c;
+                fb.O4.x = elements.O4x;
+                fb.legLength = elements.legLength;
+                fb.legAngle = elements.legAngle;
+                
+                try {
+                    var error = calcError();
+                    
+                    if (error <= lowestError) {  
+                        bestElements = elements;
+                        lowestError = error;
+                        done = noaction;
+                    }
+                } catch (ex) {};
+                
+                fb.popState();
+            }
+            
+            fb.a = bestElements.a;
+            fb.b = bestElements.b;
+            fb.c = bestElements.c;
+            fb.O4.x = bestElements.O4x;
+            fb.legLength = bestElements.legLength;
+            fb.legAngle = bestElements.legAngle;
+            
+            if (done || drawingGoalPath) {
+                optimizing = false;
+            } else {
+                setTimeout(f, 10);
+            }
+        })();
+    };
+
+
+    // 
+    // Graphics
+    //
+    
+    var drawFourBarPositions = function () {
+        plot.drawPoint(fb.O2.x, fb.O2.y);
+        plot.drawPoint(fb.O4.x, fb.O4.y);
+        plot.drawPoint(fb.pA.x, fb.pA.y);
+        plot.drawPoint(fb.pB.x, fb.pB.y);
+        plot.drawPoint(fb.legPoint.x, fb.legPoint.y);
+        plot.drawLine(fb.O2.x, fb.O2.y, fb.pA.x, fb.pA.y);
+        plot.drawLine(fb.pA.x, fb.pA.y, fb.pB.x, fb.pB.y);
+        plot.drawLine(fb.pB.x, fb.pB.y, fb.O4.x, fb.O4.y);
+        plot.drawLine(fb.O4.x, fb.O4.y, fb.O2.x, fb.O2.y);
+        plot.drawLine(fb.pA.x, fb.pA.y, fb.legPoint.x, fb.legPoint.y);
+        plot.drawLine(fb.pB.x, fb.pB.y, fb.legPoint.x, fb.legPoint.y);
+    };
+    
+    var iteration = (function () {
+        var count = 0,
+            maxCount = 200,
+            speed = 2;
+
+        return function () {
+            if (!optimizing) {
+                fb.theta2 = count * Math.PI * 2 / maxCount;
+                count = (count + speed)%maxCount;
+            
+                fb.calcLegPath(100);
+            }
+            
+            fb.runPositionAnalysis();
+            fb.recalculatePoints();
+            
+            plot.restoreToBackground();
+            drawFourBarPositions();
+            
+            plot.drawPath(fb.cachedLegPath, {drawColor:"red"});
+            
+            if (goalPath) {
+                plot.drawPath(goalPath, {drawColor: "black"});
+            }
+        }
+    })();
+    
+    setInterval(iteration, DT);
+}());
+</script>
+</html>
