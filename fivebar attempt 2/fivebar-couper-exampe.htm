@@ -1,0 +1,100 @@
+<html>
+<style>
+body {
+    text-align: center;
+}
+
+canvas {
+    margin: 1px 0px 0px 0px;
+    padding: 0px 0px 0px 0px;
+}
+</style>
+<h3>Five-bar with two inputs</h3>
+<div id="container"></div>
+<script>
+Math.euclid = function (p1, p2) {
+    var dx = p1.x - p2.x,
+        dy = p1.y - p2.y;
+    return Math.sqrt(dx * dx + dy * dy);
+};    
+</script>
+<script src="../plotjs/plot.js"></script>
+<script src="../fourbar.js"></script>
+<script src="fivebar.js"></script>
+<script src="fivebar-couper.js"></script>
+<script>
+(function () {
+    "use strict";
+
+    var plot = new Plot({
+            container: "container",
+            pixelWidth: 500,
+            pixelHeight: 500,
+            minX: -10,
+            maxX: 10,
+            minY: -10,
+            maxY: 10,
+            pointRadius: 0.2,
+            lineWidth: 0.1,
+            drawColor: "blue",
+            backgroundColor: "lightGray"
+        }),
+        
+        fiveBarCoupler = new FiveBarCoupler({
+            a1: 1, 
+            a2: 4, 
+            a3: 5,
+            a4: 1.5,
+            a5: 2,
+            P1: {x: -3, y: 0},
+            P5: {x: 3, y: 0},
+            theta3: Math.PI/2,
+            useSafeMath: true
+            }),
+        
+        period = 50,
+        speed1 = 2, // rad/sec
+        speed2 = 3; // rad/sec
+    
+    
+    // 
+    // Graphics
+    //
+    
+    var draw = function (fb) {
+        plot.drawPoint(fb.P1.x, fb.P1.y);
+        plot.drawPoint(fb.P2.x, fb.P2.y);
+        plot.drawPoint(fb.P3.x, fb.P3.y);
+        plot.drawPoint(fb.P4.x, fb.P4.y);
+        plot.drawPoint(fb.P5.x, fb.P5.y);
+        plot.drawPoint(fb.P6.x, fb.P6.y);
+        plot.drawLine(fb.P1.x, fb.P1.y, fb.P2.x, fb.P2.y);
+        plot.drawLine(fb.P2.x, fb.P2.y, fb.P3.x, fb.P3.y);
+        plot.drawLine(fb.P2.x, fb.P2.y, fb.P6.x, fb.P6.y);
+        plot.drawLine(fb.P3.x, fb.P3.y, fb.P4.x, fb.P4.y);
+        plot.drawLine(fb.P3.x, fb.P3.y, fb.P6.x, fb.P6.y);
+        plot.drawLine(fb.P4.x, fb.P4.y, fb.P5.x, fb.P5.y);
+    };
+    
+    var path = fiveBarCoupler.calcCouplerPath(100, speed1, speed2);
+    
+    (function iteration() {
+        var start, time, timeTaken;
+        
+        start = new Date().getTime();
+        time = start / 1000;
+        
+        fiveBarCoupler.setInputAngles(
+            (time * speed1) % (2 * Math.PI), 
+            (time * speed2) % (2 * Math.PI));
+
+        plot.restoreToBackground();
+        draw(fiveBarCoupler);
+        plot.drawPath(path, {drawColor: "red"});
+
+        timeTaken = new Date().getTime() - start;
+        setTimeout(iteration, period - timeTaken);
+    }());
+}());
+</script>
+</html>
