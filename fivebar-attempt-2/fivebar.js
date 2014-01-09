@@ -90,7 +90,10 @@ FiveBar.prototype.create = function (config, my) {
             
             diff = P4angle - P5angle;
         
-        my.fourBar.theta2 = that.theta1 - diff; // TODO: this is incorrect, finish this function
+        my.fourBar.theta2 = that.theta1 - diff; 
+        my.fourBar.a = that.a1;
+        my.fourBar.b = that.a2;
+        my.fourBar.c = that.a3;
         my.fourBar.runPositionAnalysis();
         
         // note: that.P2 and fourBar.pA reference the same object

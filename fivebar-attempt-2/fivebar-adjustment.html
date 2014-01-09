@@ -1,0 +1,134 @@
+<html>
+<style>
+body {
+    text-align: center;
+}
+
+canvas {
+    margin: 1px 0px 0px 0px;
+    padding: 0px 0px 0px 0px;
+}
+</style>
+<h3>Fivebar animation example</h3>
+<div id="container"></div>
+<div id="a1_input"></div>
+<div id="a2_input"></div>
+<div id="a3_input"></div>
+<div id="a4_input"></div>
+<div id="a5_input"></div>
+<div id="theta3_input"></div>
+<div id="theta2_phase"></div>
+<div id="crank_distance"></div>
+<script>
+Math.euclid = function (p1, p2) {
+    var dx = p1.x - p2.x,
+        dy = p1.y - p2.y;
+    return Math.sqrt(dx * dx + dy * dy);
+};
+</script>
+<script src="../plotjs/plot.js"></script>
+<script src="../scrollbar.js"></script>
+<script src="../fourbar.js"></script>
+<script src="fivebar.js"></script>
+<script src="fivebar-coupler.js"></script>
+<script src="fivebar-coupler-animator.js"></script>
+<script>
+(function () {
+    "use strict";
+
+    var fiveBar = new FiveBarCoupler({
+            a1: 2, 
+            a2: 4, 
+            a3: 5,
+            a4: 1,
+            a5: 0,
+            P1: {x: -3, y: 0},
+            P5: {x: 3, y: 0},
+            theta3: Math.PI/2,
+            useSafeMath: true
+            }),
+
+        animator = new FiveBarCouplerAnimator({
+            plot: new Plot({
+                container: "container",
+                pixelWidth: 300,
+                pixelHeight: 300,
+                minX: -14,
+                maxX: 14,
+                minY: -10,
+                maxY: 18,
+                pointRadius: 0.2,
+                lineWidth: 0.1,
+                drawColor: "blue",
+                backgroundColor: "lightGray"
+            }),
+            fiveBar: fiveBar,
+            inputSpeed1: 1,
+            inputSpeed2: 1,
+            framesPerSecond: 30
+            }),
+    
+        bar = new ScrollBar({
+            container: "crank_distance",
+            pixelWidth: 500,
+            pixelHeight: 30,
+            minX: -5,
+            maxX: 5,
+            startX: fiveBar.P5.x,
+            drawColor: "darkGray",
+            backgroundColor: "lightGray",
+            movedToCallback: function (x) { 
+                var tmp = fiveBar.P5.x;
+                fiveBar.P5.x = x;
+                
+                try {
+                    if (!fiveBar.calcCouplerPath(1000, animator.speed1, animator.speed2)) {
+                        fiveBar.P5.x = tmp;
+                        bar.setPosition(tmp);
+                    }
+                } catch (e) {
+                    fiveBar.P5.x = tmp;
+                    bar.setPosition(tmp);
+                }
+            }
+        }),
+    
+        bars = [];
+
+
+    [{name:"a1_input", field: "a1", min: 0, max: 10},
+     {name:"a2_input", field: "a2", min: 0, max: 10},
+     {name:"a3_input", field: "a3", min: 0, max: 10},
+     {name:"a4_input", field: "a4", min: 0, max: 10},
+     {name:"a5_input", field: "a5", min: 0, max: 10},
+     {name:"theta3_input", field: "theta3", min: 0, max: 2*Math.PI},
+     {name:"theta2_phase", field: "theta2_phase", min: 0, max: 2*Math.PI}
+    ].forEach(function (elem, index) {
+        bars[index] = new ScrollBar({
+            container: elem.name,
+            pixelWidth: 500,
+            pixelHeight: 30,
+            minX: elem.min,
+            maxX: elem.max,
+            startX: fiveBar[elem.field],
+            drawColor: "darkGray",
+            backgroundColor: "lightGray",
+            movedToCallback: function (x) {
+                var tmp = fiveBar[elem.field];
+                fiveBar[elem.field] = x;
+                
+                try {
+                    if (!fiveBar.calcCouplerPath(1000, animator.speed1, animator.speed2)) {
+                        fiveBar[elem.field] = tmp;
+                        bars[index].setPosition(tmp);
+                    }
+                } catch (e) {
+                    fiveBar[elem.field] = tmp;
+                    bars[index].setPosition(tmp); 
+                }
+            }
+        });
+    });
+})();
+</script>
+</html>

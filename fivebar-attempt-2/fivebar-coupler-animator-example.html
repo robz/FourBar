@@ -1,0 +1,63 @@
+<html>
+<style>
+body {
+    text-align: center;
+}
+
+canvas {
+    margin: 1px 0px 0px 0px;
+    padding: 0px 0px 0px 0px;
+}
+</style>
+<h3>Fivebar animation example</h3>
+<div id="container"></div>
+<script>
+Math.euclid = function (p1, p2) {
+    var dx = p1.x - p2.x,
+        dy = p1.y - p2.y;
+    return Math.sqrt(dx * dx + dy * dy);
+};
+</script>
+<script src="../plotjs/plot.js"></script>
+<script src="../fourbar.js"></script>
+<script src="fivebar.js"></script>
+<script src="fivebar-coupler.js"></script>
+<script src="fivebar-coupler-animator.js"></script>
+<script>
+(function () {
+    "use strict";
+
+    var fiveBar = new FiveBarCoupler({
+            a1: 2, 
+            a2: 4, 
+            a3: 5,
+            a4: 1,
+            a5: 0,
+            P1: {x: -3, y: 0},
+            P5: {x: 3, y: 0},
+            theta3: Math.PI/2,
+            useSafeMath: true
+            }),
+
+        animator = new FiveBarCouplerAnimator({
+            plot: new Plot({
+                container: "container",
+                pixelWidth: 300,
+                pixelHeight: 300,
+                minX: -7,
+                maxX: 7,
+                minY: -5,
+                maxY: 9,
+                pointRadius: 0.2,
+                lineWidth: 0.1,
+                drawColor: "blue",
+                backgroundColor: "lightGray"
+            }),
+            fiveBar: fiveBar,
+            inputSpeed1: 2,
+            inputSpeed2: 3,
+            framesPerSecond: 30
+            });
+})();
+</script>
+</html>
