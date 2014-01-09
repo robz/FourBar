@@ -42,6 +42,7 @@ FiveBarCoupler.prototype.create = function (config, my) {
     that.a5 = config.a5;
     that.theta3 = config.theta3;
     that.P6 = {x: null, y: null};
+    that.theta2_phase = 0;
 
 
     //
@@ -77,7 +78,7 @@ FiveBarCoupler.prototype.create = function (config, my) {
 
                 that.setInputAngles(
                     theta1 % (2 * Math.PI),
-                    (theta1 * speed2 / speed1) % (2 * Math.PI)
+                    (theta1 * speed2 / speed1 + that.theta2_phase) % (2 * Math.PI)
                 );
 
                 points.push([that.P6.x, that.P6.y]);
@@ -88,7 +89,7 @@ FiveBarCoupler.prototype.create = function (config, my) {
             that.setInputAngles(theta1_temp, theta2_temp);
         }
         
-        that.cachedLegPath = points;
+        that.cachedPath = points;
 
         return points;
     };

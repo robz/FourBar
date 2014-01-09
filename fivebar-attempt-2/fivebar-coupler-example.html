@@ -21,19 +21,19 @@ Math.euclid = function (p1, p2) {
 <script src="../plotjs/plot.js"></script>
 <script src="../fourbar.js"></script>
 <script src="fivebar.js"></script>
-<script src="fivebar-couper.js"></script>
+<script src="fivebar-coupler.js"></script>
 <script>
 (function () {
     "use strict";
 
     var plot = new Plot({
             container: "container",
-            pixelWidth: 500,
-            pixelHeight: 500,
-            minX: -10,
-            maxX: 10,
-            minY: -10,
-            maxY: 10,
+            pixelWidth: 300,
+            pixelHeight: 300,
+            minX: -7,
+            maxX: 7,
+            minY: -5,
+            maxY: 9,
             pointRadius: 0.2,
             lineWidth: 0.1,
             drawColor: "blue",
@@ -41,18 +41,18 @@ Math.euclid = function (p1, p2) {
         }),
         
         fiveBarCoupler = new FiveBarCoupler({
-            a1: 1, 
+            a1: 2, 
             a2: 4, 
             a3: 5,
-            a4: 1.5,
-            a5: 2,
+            a4: 1,
+            a5: 0,
             P1: {x: -3, y: 0},
             P5: {x: 3, y: 0},
             theta3: Math.PI/2,
             useSafeMath: true
             }),
         
-        period = 50,
+        period = 60,
         speed1 = 2, // rad/sec
         speed2 = 3; // rad/sec
     
@@ -76,7 +76,7 @@ Math.euclid = function (p1, p2) {
         plot.drawLine(fb.P4.x, fb.P4.y, fb.P5.x, fb.P5.y);
     };
     
-    var path = fiveBarCoupler.calcCouplerPath(100, speed1, speed2);
+    var path = fiveBarCoupler.calcCouplerPath(1000, speed1, speed2);
     
     (function iteration() {
         var start, time, timeTaken;
