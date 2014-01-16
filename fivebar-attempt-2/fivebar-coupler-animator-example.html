@@ -9,7 +9,7 @@ canvas {
     padding: 0px 0px 0px 0px;
 }
 </style>
-<h3>Fivebar animation example</h3>
+<h3>Fivebar animation</h3>
 <div id="container"></div>
 <script>
 Math.euclid = function (p1, p2) {
@@ -27,7 +27,21 @@ Math.euclid = function (p1, p2) {
 (function () {
     "use strict";
 
-    var fiveBar = new FiveBarCoupler({
+    var animator = new FiveBarCouplerAnimator({
+        plot: new Plot({
+            container: "container",
+            pixelWidth: 300,
+            pixelHeight: 300,
+            minX: -7,
+            maxX: 7,
+            minY: -5,
+            maxY: 9,
+            pointRadius: 0.2,
+            lineWidth: 0.1,
+            drawColor: "blue",
+            backgroundColor: "lightGray"
+        }),
+        fiveBar: new FiveBarCoupler({
             a1: 2, 
             a2: 4, 
             a3: 5,
@@ -36,28 +50,11 @@ Math.euclid = function (p1, p2) {
             P1: {x: -3, y: 0},
             P5: {x: 3, y: 0},
             theta3: Math.PI/2,
-            useSafeMath: true
-            }),
-
-        animator = new FiveBarCouplerAnimator({
-            plot: new Plot({
-                container: "container",
-                pixelWidth: 300,
-                pixelHeight: 300,
-                minX: -7,
-                maxX: 7,
-                minY: -5,
-                maxY: 9,
-                pointRadius: 0.2,
-                lineWidth: 0.1,
-                drawColor: "blue",
-                backgroundColor: "lightGray"
-            }),
-            fiveBar: fiveBar,
-            inputSpeed1: 2,
-            inputSpeed2: 3,
-            framesPerSecond: 30
-            });
+            speed1: 2,
+            speed2: 3
+        }),
+        framesPerSecond: 30
+    });
 })();
 </script>
 </html>

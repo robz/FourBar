@@ -9,7 +9,7 @@ canvas {
     padding: 0px 0px 0px 0px;
 }
 </style>
-<h3>Five-bar with two inputs</h3>
+<h3>Fivebar with coupler</h3>
 <div id="container"></div>
 <script>
 Math.euclid = function (p1, p2) {
@@ -49,12 +49,12 @@ Math.euclid = function (p1, p2) {
             P1: {x: -3, y: 0},
             P5: {x: 3, y: 0},
             theta3: Math.PI/2,
+            speed1: 2,
+            speed2: 3,
             useSafeMath: true
             }),
         
-        period = 60,
-        speed1 = 2, // rad/sec
-        speed2 = 3; // rad/sec
+        period = 60;
     
     
     // 
@@ -76,7 +76,7 @@ Math.euclid = function (p1, p2) {
         plot.drawLine(fb.P4.x, fb.P4.y, fb.P5.x, fb.P5.y);
     };
     
-    var path = fiveBarCoupler.calcCouplerPath(1000, speed1, speed2);
+    var path = fiveBarCoupler.calcCouplerPath(1000);
     
     (function iteration() {
         var start, time, timeTaken;
@@ -85,8 +85,8 @@ Math.euclid = function (p1, p2) {
         time = start / 1000;
         
         fiveBarCoupler.setInputAngles(
-            (time * speed1) % (2 * Math.PI), 
-            (time * speed2) % (2 * Math.PI));
+            (time * fiveBarCoupler.speed1) % (2 * Math.PI), 
+            (time * fiveBarCoupler.speed2) % (2 * Math.PI));
 
         plot.restoreToBackground();
         draw(fiveBarCoupler);

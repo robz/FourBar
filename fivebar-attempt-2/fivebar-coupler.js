@@ -5,7 +5,7 @@ var FiveBarCoupler = function (config) {
 };
 
 FiveBarCoupler.prototype.createRequiredParameters = [
-    "a1", "a2", "a3", "a4", "P1", "P5", "a5", "theta3"
+    "a1", "a2", "a3", "a4", "P1", "P5", "a5", "theta3", "speed1", "speed2" // NOTE: incorrectly assuming that speedi is positive and an integer
 ];
 
 FiveBarCoupler.prototype.create = function (config, my) {
@@ -41,8 +41,10 @@ FiveBarCoupler.prototype.create = function (config, my) {
 
     that.a5 = config.a5;
     that.theta3 = config.theta3;
+    that.theta2_phase = config.theta2_phase || 0;
     that.P6 = {x: null, y: null};
-    that.theta2_phase = 0;
+    that.speed1 = config.speed1;
+    that.speed2 = config.speed2;
 
 
     //
@@ -63,14 +65,18 @@ FiveBarCoupler.prototype.create = function (config, my) {
         that.P6.y = that.P3.y + that.a5 * Math.sin(that.theta3 + phi);
     };
     
-    that.calcCouplerPath = function (numPoints, speed1, speed2) {
+    that.calcCouplerPath = function (numPoints) {
         var theta1_temp = that.theta1,
             theta2_temp = that.theta2,
         
             points = [],
             i,
             theta1,
-            revs = speed2 * speed1; // TODO: this won't work for negative speeds or for speeds that aren't integers
+            revs = that.speed1 * that.speed2;
+        
+        if (revs < 0) {
+            revs = -revs;
+        }
         
         try {
             for (i = 0; i < numPoints; i += 1) {
@@ -78,7 +84,7 @@ FiveBarCoupler.prototype.create = function (config, my) {
 
                 that.setInputAngles(
                     theta1 % (2 * Math.PI),
-                    (theta1 * speed2 / speed1 + that.theta2_phase) % (2 * Math.PI)
+                    (theta1 * that.speed2 / that.speed1 + that.theta2_phase) % (2 * Math.PI)
                 );
 
                 points.push([that.P6.x, that.P6.y]);

@@ -5,7 +5,7 @@ var FiveBarCouplerAnimator = function (config) {
 };
 
 FiveBarCouplerAnimator.prototype.createRequiredParameters = [
-    "plot", "fiveBar", "framesPerSecond", "inputSpeed1", "inputSpeed2"
+    "plot", "fiveBar", "framesPerSecond"
 ];
 
 FiveBarCouplerAnimator.prototype.create = function (config) {
@@ -43,14 +43,13 @@ FiveBarCouplerAnimator.prototype.create = function (config) {
             plot.drawLine(fb.P3.x, fb.P3.y, fb.P4.x, fb.P4.y);
             plot.drawLine(fb.P3.x, fb.P3.y, fb.P6.x, fb.P6.y);
             plot.drawLine(fb.P4.x, fb.P4.y, fb.P5.x, fb.P5.y);
-        };
+        };  
     
     // publics
-    that.speed1 = config.inputSpeed1;
-    that.speed2 = config.inputSpeed2;
+    that.speedRatio = config.speedRatio || 1;
     
     // construction
-    fb.calcCouplerPath(200, that.speed1, that.speed2);
+    fb.calcCouplerPath(200);
     
     (function iteration() {
         var start, time, timeTaken;
@@ -59,8 +58,8 @@ FiveBarCouplerAnimator.prototype.create = function (config) {
         time = start / 1000;
         
         fb.setInputAngles(
-            (time * that.speed1) % (2 * Math.PI),
-            (time * that.speed2 + fb.theta2_phase) % (2 * Math.PI)
+            (time * fb.speed1 * that.speedRatio) % (2 * Math.PI),
+            (time * fb.speed2 * that.speedRatio + fb.theta2_phase) % (2 * Math.PI)
         );
 
         plot.restoreToBackground();
