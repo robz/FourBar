@@ -90,7 +90,7 @@ FiveBar.prototype.create = function (config, my) {
             
             diff = P4angle - P5angle;
         
-        my.fourBar.theta2 = that.theta1 - diff; 
+        my.fourBar.theta2 = (that.theta1 - diff + Math.PI * 2) % (Math.PI * 2);
         my.fourBar.a = that.a1;
         my.fourBar.b = that.a2;
         my.fourBar.c = that.a3;
