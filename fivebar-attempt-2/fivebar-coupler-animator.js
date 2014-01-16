@@ -65,6 +65,10 @@ FiveBarCouplerAnimator.prototype.create = function (config) {
         plot.restoreToBackground();
         draw();
         plot.drawPath(fb.cachedPath, {drawColor: "red"});
+        
+        if (that.goalPath) {
+            plot.drawPath(that.goalPath, {drawColor: "black"});
+        }
 
         timeTaken = new Date().getTime() - start;
         setTimeout(iteration, period - timeTaken);

@@ -1,7 +1,7 @@
-var FiveBar = function (config) {
+var FiveBar = function (config, my) {
     "use strict";
     
-    return this.create(config);
+    return this.create(config, my);
 };
 
 FiveBar.prototype.createRequiredParameters = [
@@ -33,6 +33,8 @@ FiveBar.prototype.create = function (config, my) {
     
     my = my || {};
     
+    
+    
     my.fourBar = new FourBar({
         a: config.a1,
         b: config.a2,
@@ -44,7 +46,6 @@ FiveBar.prototype.create = function (config, my) {
         },
         useSafeMath: config.useSafeMath
     });
-
 
     //
     // public members
