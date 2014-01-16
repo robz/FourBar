@@ -49,7 +49,7 @@ FiveBarCouplerAnimator.prototype.create = function (config) {
     that.speedRatio = config.speedRatio || 1;
     
     // construction
-    fb.calcCouplerPath(200);
+    fb.calcCouplerPath(1000);
     
     (function iteration() {
         var start, time, timeTaken;

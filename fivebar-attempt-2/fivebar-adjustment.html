@@ -45,16 +45,16 @@ Math.euclid = function (p1, p2) {
             P1: {x: -3, y: 0},
             P5: {x: 3, y: 0},
             theta3: 0,
-            speed1: 1,
-            speed2: 1,
+            speed1: 3,
+            speed2: 4,
             useSafeMath: true
         }),
 
         animator = new FiveBarCouplerAnimator({
             plot: new Plot({
                 container: "container",
-                pixelWidth: 300,
-                pixelHeight: 300,
+                pixelWidth: 400,
+                pixelHeight: 400,
                 minX: -7,
                 maxX: 7,
                 minY: -5,
@@ -66,7 +66,7 @@ Math.euclid = function (p1, p2) {
                 }),
             fiveBar: fiveBar,
             framesPerSecond: 30,
-            speedRatio: 2
+            speedRatio: .5
         }),
     
         bar = new ScrollBar({
@@ -83,7 +83,7 @@ Math.euclid = function (p1, p2) {
                 fiveBar.P5.x = x;
                 
                 try {
-                    if (!fiveBar.calcCouplerPath(200)) {
+                    if (!fiveBar.calcCouplerPath(1000)) {
                         fiveBar.P5.x = tmp;
                         bar.setPosition(tmp);
                     }
@@ -102,24 +102,27 @@ Math.euclid = function (p1, p2) {
      {name:"a3_input", field: "a3", min: 0, max: 10},
      {name:"a4_input", field: "a4", min: 0, max: 10},
      {name:"a5_input", field: "a5", min: 0, max: 10},
-     {name:"theta3_input", field: "theta3", min: 0, max: 2*Math.PI},
-     {name:"theta2_phase", field: "theta2_phase", min: 0, max: 2*Math.PI}
-    ].forEach(function (elem, index) {
+     {name:"theta3_input", field: "theta3", min: 0, max: 2 * Math.PI},
+     {name:"theta2_phase", field: "theta2_phase", min: 0, max: 2 * Math.PI}
+    ]
+    .forEach(function (elem, index) {
         bars[index] = new ScrollBar({
-            container: elem.name,
             pixelWidth: 500,
             pixelHeight: 30,
+            drawColor: "darkGray",
+            backgroundColor: "lightGray",
+            
+            container: elem.name,
             minX: elem.min,
             maxX: elem.max,
             startX: fiveBar[elem.field],
-            drawColor: "darkGray",
-            backgroundColor: "lightGray",
+            
             movedToCallback: function (x) {
                 var tmp = fiveBar[elem.field];
                 fiveBar[elem.field] = x;
                 
                 try {
-                    if (!fiveBar.calcCouplerPath(200, animator.speed2 / animator.speed1)) {
+                    if (!fiveBar.calcCouplerPath(1000)) {
                         fiveBar[elem.field] = tmp;
                         bars[index].setPosition(tmp);
                     }
