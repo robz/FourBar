@@ -34,7 +34,7 @@ MultiFiveBarCouplerAnimator.prototype.create = function (config) {
             plot.drawPoint(fb.P3.x, fb.P3.y);
             plot.drawPoint(fb.P4.x, fb.P4.y);
             plot.drawPoint(fb.P5.x, fb.P5.y);
-            plot.drawPoint(fb.P6.x, fb.P6.y);
+            plot.drawPoint(fb.P6.x, fb.P6.y, {drawColor:"blue"});
             plot.drawLine(fb.P1.x, fb.P1.y, fb.P2.x, fb.P2.y);
             plot.drawLine(fb.P2.x, fb.P2.y, fb.P3.x, fb.P3.y);
             plot.drawLine(fb.P2.x, fb.P2.y, fb.P6.x, fb.P6.y);
