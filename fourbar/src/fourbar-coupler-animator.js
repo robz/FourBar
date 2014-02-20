@@ -5,7 +5,7 @@ var FourBarCouplerAnimator = function (config) {
 };
 
 FourBarCouplerAnimator.prototype.createRequiredParameters = [
-    "plot", "fourBar", "framesPerSecond", "inputSpeed", "draw"
+    "plot", "fourBar", "framesPerSecond", "inputSpeed"
 ];
 
 FourBarCouplerAnimator.prototype.create = function (config) {
@@ -28,8 +28,21 @@ FourBarCouplerAnimator.prototype.create = function (config) {
     var plot = config.plot,
         fb = config.fourBar,
         period = 1000/config.framesPerSecond,
-        speed = config.inputSpeed,
-        draw = config.draw;
+        speed = config.inputSpeed;
+    
+    var drawFourBarPositions = function () {
+        plot.drawPoint(fb.O2.x, fb.O2.y);
+        plot.drawPoint(fb.O4.x, fb.O4.y);
+        plot.drawPoint(fb.pA.x, fb.pA.y);
+        plot.drawPoint(fb.pB.x, fb.pB.y);
+        plot.drawPoint(fb.legPoint.x, fb.legPoint.y);
+        plot.drawLine(fb.O2.x, fb.O2.y, fb.pA.x, fb.pA.y);
+        plot.drawLine(fb.pA.x, fb.pA.y, fb.pB.x, fb.pB.y);
+        plot.drawLine(fb.pB.x, fb.pB.y, fb.O4.x, fb.O4.y);
+        plot.drawLine(fb.O4.x, fb.O4.y, fb.O2.x, fb.O2.y);
+        plot.drawLine(fb.pA.x, fb.pA.y, fb.legPoint.x, fb.legPoint.y);
+        plot.drawLine(fb.pB.x, fb.pB.y, fb.legPoint.x, fb.legPoint.y);
+    };
         
     // construction
     var path = fb.calcLegPath(100);
@@ -45,7 +58,7 @@ FourBarCouplerAnimator.prototype.create = function (config) {
         fb.recalculatePoints();
         
         plot.restoreToBackground();
-        draw();
+        drawFourBarPositions();
         plot.drawPath(path, {drawColor:"red"});
         
         var timeTaken = new Date().getTime() - start;

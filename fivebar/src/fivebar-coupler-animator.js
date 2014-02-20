@@ -27,29 +27,29 @@ FiveBarCouplerAnimator.prototype.create = function (config) {
     
     // privates
         plot = config.plot,
-        fb = config.fiveBar,
         period = 1000 / config.framesPerSecond,
     
         draw = function () {
-            plot.drawPoint(fb.P1.x, fb.P1.y);
-            plot.drawPoint(fb.P2.x, fb.P2.y);
-            plot.drawPoint(fb.P3.x, fb.P3.y);
-            plot.drawPoint(fb.P4.x, fb.P4.y);
-            plot.drawPoint(fb.P5.x, fb.P5.y);
-            plot.drawPoint(fb.P6.x, fb.P6.y);
-            plot.drawLine(fb.P1.x, fb.P1.y, fb.P2.x, fb.P2.y);
-            plot.drawLine(fb.P2.x, fb.P2.y, fb.P3.x, fb.P3.y);
-            plot.drawLine(fb.P2.x, fb.P2.y, fb.P6.x, fb.P6.y);
-            plot.drawLine(fb.P3.x, fb.P3.y, fb.P4.x, fb.P4.y);
-            plot.drawLine(fb.P3.x, fb.P3.y, fb.P6.x, fb.P6.y);
-            plot.drawLine(fb.P4.x, fb.P4.y, fb.P5.x, fb.P5.y);
+            plot.drawPoint(that.fb.P1.x, that.fb.P1.y);
+            plot.drawPoint(that.fb.P2.x, that.fb.P2.y);
+            plot.drawPoint(that.fb.P3.x, that.fb.P3.y);
+            plot.drawPoint(that.fb.P4.x, that.fb.P4.y);
+            plot.drawPoint(that.fb.P5.x, that.fb.P5.y);
+            plot.drawPoint(that.fb.P6.x, that.fb.P6.y);
+            plot.drawLine(that.fb.P1.x, that.fb.P1.y, that.fb.P2.x, that.fb.P2.y);
+            plot.drawLine(that.fb.P2.x, that.fb.P2.y, that.fb.P3.x, that.fb.P3.y);
+            plot.drawLine(that.fb.P2.x, that.fb.P2.y, that.fb.P6.x, that.fb.P6.y);
+            plot.drawLine(that.fb.P3.x, that.fb.P3.y, that.fb.P4.x, that.fb.P4.y);
+            plot.drawLine(that.fb.P3.x, that.fb.P3.y, that.fb.P6.x, that.fb.P6.y);
+            plot.drawLine(that.fb.P4.x, that.fb.P4.y, that.fb.P5.x, that.fb.P5.y);
         };  
     
     // publics
+    that.fb = config.fiveBar;
     that.speedRatio = config.speedRatio || 1;
     
     // construction
-    fb.calcCouplerPath(1000);
+    that.fb.calcCouplerPath(1000);
     
     (function iteration() {
         var start, time, timeTaken;
@@ -57,14 +57,14 @@ FiveBarCouplerAnimator.prototype.create = function (config) {
         start = new Date().getTime();
         time = start / 1000;
         
-        fb.setInputAngles(
-            (time * fb.speed1 * that.speedRatio) % (2 * Math.PI),
-            (time * fb.speed2 * that.speedRatio + fb.theta2_phase) % (2 * Math.PI)
+        that.fb.setInputAngles(
+            (time * that.fb.speed1 * that.speedRatio) % (2 * Math.PI),
+            (time * that.fb.speed2 * that.speedRatio + that.fb.theta2_phase) % (2 * Math.PI)
         );
 
         plot.restoreToBackground();
         draw();
-        plot.drawPath(fb.cachedPath, {drawColor: "red"});
+        plot.drawPath(that.fb.cachedPath, {drawColor: "red"});
         
         if (that.goalPath) {
             plot.drawPath(that.goalPath, {drawColor: "black"});

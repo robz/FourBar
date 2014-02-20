@@ -44,7 +44,7 @@ FiveBar.prototype.create = function (config, my) {
             x: config.P5.x + config.a4 * Math.cos(config.theta2 || 0),
             y: config.P5.y + config.a4 * Math.sin(config.theta2 || 0)
         },
-        useSafeMath: config.useSafeMath
+        useSafeMath: true
     });
 
     //

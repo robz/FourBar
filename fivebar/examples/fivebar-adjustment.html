@@ -1,0 +1,242 @@
+<html>
+<style>
+body {
+    text-align: center;
+    width: 1320px;
+    margin: 0 auto;
+}
+
+canvas {
+    margin: 1px 0px 0px 0px;
+    padding: 0px 0px 0px 0px;
+}
+
+#adjustments {
+    float: left;
+}
+
+#data {
+    width: 500;
+    height: 100; 
+}
+</style>
+<div id="adjustments">
+    <div id="a1_input"></div>
+    <div id="a2_input"></div>
+    <div id="a3_input"></div>
+    <div id="a4_input"></div>
+    <div id="a5_input"></div>
+    <div id="theta3_input"></div>
+    <div id="theta2_phase"></div>
+    <div id="crank_distance"></div>
+    <div id="crank_angle"></div><br/>
+    
+    <textarea id="data"></textarea><br/>
+    <button id="loadbtn">load</button>
+    <button id="dumpbtn">dump</button>
+</div>
+<div id="container"></div>
+<script>
+Math.euclid = function (p1, p2) {
+    var dx = p1.x - p2.x,
+        dy = p1.y - p2.y;
+    return Math.sqrt(dx * dx + dy * dy);
+};
+</script>
+<script src="../../plotjs/plot.js"></script>
+<script src="../../scrollbar/scrollbar.js"></script>
+<script src="../../fourbar/src/fourbar.js"></script>
+<script src="../src/fivebar.js"></script>
+<script src="../src/fivebar-coupler.js"></script>
+<script src="../src/fivebar-coupler-animator.js"></script>
+<script>
+(function () {
+    "use strict";
+
+    var fiveBar = new FiveBarCoupler({
+        P1:{x:0, y:0},
+        P5: {
+            x: 4.1402,
+            y: -2.3649
+        },
+        a1: 2,
+        a2: 4,
+        a3: 5.198,
+        a4: 1.418,
+        a5: 2.76,
+        speed1: 2,
+        speed2: 1,
+        theta2_phase: 4.4095,
+        theta3: 5.0730
+    }),
+
+        animator = new FiveBarCouplerAnimator({
+            plot: new Plot({
+                container: "container",
+                pixelWidth: 800,
+                pixelHeight: 600,
+                minX: -15,
+                maxX: 15,
+                minY: -22.5/2,
+                maxY: 22.5/2,
+                pointRadius: 0.2,
+                lineWidth: 0.1,
+                drawColor: "blue",
+                backgroundColor: "lightGray"
+                }),
+            fiveBar: fiveBar,
+            framesPerSecond: 30,
+            speedRatio: .5
+        }),
+        
+        updateTextbox = function () {
+            var obj = {};
+            
+            ["P1", "P5", "a1", "a2", "a3", "a4", "a5", "speed1", "speed2", "theta2_phase", "theta3"]
+            .forEach(function (elem) {
+                obj[elem] = fiveBar[elem];
+            });
+            
+            document.getElementById("data").value = JSON.stringify(obj);
+        },
+        
+        crank_distance = Math.euclid(fiveBar.P5, fiveBar.P1),
+        crank_angle = Math.atan(fiveBar.P5.y - fiveBar.P1.y, fiveBar.P5.x - fiveBar.P1.x),
+    
+        cd_bar, ca_bar,
+        bars = [];
+        
+    bars.push(new ScrollBar({
+        label: "crank_distance",
+        container: "crank_distance",
+        pixelWidth: 500,
+        pixelHeight: 30,
+        minX: -10,
+        maxX: 10,
+        startX: crank_distance,
+        drawColor: "darkGray",
+        backgroundColor: "lightGray",
+        movedToCallback: function (x) { 
+            var tmp = crank_distance,
+                tmpx = fiveBar.P5.x,
+                tmpy = fiveBar.P5.y;
+
+            crank_distance = x;
+            fiveBar.P5.x = crank_distance * Math.cos(crank_angle);
+            fiveBar.P5.y = crank_distance * Math.sin(crank_angle);
+
+            try {
+                if (!fiveBar.calcCouplerPath(1000)) {
+                    fiveBar.P5.x = tmpx;
+                    fiveBar.P5.y = tmpy;
+                    crank_distance = tmp;
+                    bars[0].setPosition(tmp);
+                }
+            } catch (e) {
+                fiveBar.P5.x = tmpx;
+                fiveBar.P5.y = tmpy;
+                crank_distance = tmp;
+                bars[0].setPosition(tmp);
+            }
+        }
+    }));
+    
+    bars.push(new ScrollBar({
+        label: "crank_angle",
+        container: "crank_angle",
+        pixelWidth: 500,
+        pixelHeight: 30,
+        minX: -Math.PI,
+        maxX: Math.PI,
+        startX: crank_angle,
+        drawColor: "darkGray",
+        backgroundColor: "lightGray",
+        movedToCallback: function (x) { 
+            var tmp = crank_angle,
+                tmpx = fiveBar.P5.x,
+                tmpy = fiveBar.P5.y;
+
+                crank_angle = x;
+                fiveBar.P5.x = crank_distance * Math.cos(crank_angle);
+                fiveBar.P5.y = crank_distance * Math.sin(crank_angle);
+
+            try {
+                if (!fiveBar.calcCouplerPath(1000)) {
+                    fiveBar.P5.x = tmpx;
+                    fiveBar.P5.y = tmpy;
+                    crank_angle = tmp;
+                    bars[1].setPosition(tmp);
+                }
+            } catch (e) {
+                console.log(e);
+                fiveBar.P5.x = tmpx;
+                fiveBar.P5.y = tmpy;
+                crank_angle = tmp;
+                bars[1].setPosition(tmp);
+            }
+        }
+    }));
+
+    [{name:"a1_input", field: "a1", min: 0, max: 10},
+     {name:"a2_input", field: "a2", min: 0, max: 10},
+     {name:"a3_input", field: "a3", min: 0, max: 10},
+     {name:"a4_input", field: "a4", min: 0, max: 10},
+     {name:"a5_input", field: "a5", min: 0, max: 10},
+     {name:"theta3_input", field: "theta3", min: 0, max: 2 * Math.PI},
+     {name:"theta2_phase", field: "theta2_phase", min: 0, max: 2 * Math.PI}
+    ]
+    .forEach(function (elem) {
+        var index = bars.length;
+    
+        bars.push(new ScrollBar({
+            label: elem.name,
+            
+            pixelWidth: 500,
+            pixelHeight: 30,
+            drawColor: "darkGray",
+            backgroundColor: "lightGray",
+            
+            container: elem.name,
+            minX: elem.min,
+            maxX: elem.max,
+            startX: fiveBar[elem.field],
+            
+            movedToCallback: function (x) {
+                var tmp = fiveBar[elem.field];
+                fiveBar[elem.field] = x;
+                
+                try {
+                    if (!fiveBar.calcCouplerPath(1000)) {
+                        fiveBar[elem.field] = tmp;
+                        bars[index].setPosition(tmp);
+                    }
+                } catch (e) {
+                    fiveBar[elem.field] = tmp;
+                    bars[index].setPosition(tmp); 
+                }
+            }
+        }));
+    });
+
+    document.getElementById("loadbtn").onclick = function () { 
+        var obj = JSON.parse(document.getElementById("data").value);
+        
+        ["a1", "a2", "a3", "a4", "a5", "speed1", "speed2", "theta2_phase", "theta3"]
+        .forEach(function (elem) {
+            fiveBar[elem] = obj[elem];
+        });
+        
+        fiveBar.P1.x = obj.P1.x;
+        fiveBar.P1.y = obj.P1.y;
+        fiveBar.P5.x = obj.P5.x;
+        fiveBar.P5.y = obj.P5.y;
+        
+        fiveBar.calcCouplerPath(1000);
+    };
+    
+    document.getElementById("dumpbtn").onclick = updateTextbox;
+    
+    updateTextbox();
+})();
+</script>
+</html>
