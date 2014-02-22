@@ -1,0 +1,61 @@
+<html>
+<style>
+body {
+    text-align: center;
+    margin: 0 auto;
+}
+
+canvas {
+    margin: 1px 0px 0px 0px;
+    padding: 0px 0px 0px 0px;
+}
+</style>
+<div id="container"></div>
+<script>
+Math.euclid = function (p1, p2) {
+    var dx = p1.x - p2.x,
+        dy = p1.y - p2.y;
+    return Math.sqrt(dx * dx + dy * dy);
+};
+</script>
+<script src="../plotjs/plot.js"></script>
+<script src="../scrollbar/scrollbar.js"></script>
+<script src="../fourbar/src/fourbar.js"></script>
+<script src="../fivebar/src/fivebar.js"></script>
+<script src="../fivebar/src/fivebar-coupler.js"></script>
+<script src="../fivebar/src/multifivebar-coupler-animator.js"></script>
+<script src="src/alphabet.js"></script>
+<script>
+(function () {
+    "use strict";
+
+    var plot = new Plot({
+            container: "container",
+            pixelWidth: 700,
+            pixelHeight: 500,
+            minX: -1,
+            maxX: 6,
+            minY: -2,
+            maxY: 3,
+            pointRadius: 0.02,
+            lineWidth: 0.01,
+            drawColor: "black",
+            backgroundColor: "lightGray"
+            });
+    
+    var fiveBars = [
+        new FiveBarCoupler(alphabet.A),
+        new FiveBarCoupler(alphabet.B.translate(1, 0)),
+        new FiveBarCoupler(alphabet.Q.translate(2, 0)),
+        new FiveBarCoupler(alphabet.R.translate(3, 0)),
+        new FiveBarCoupler(alphabet.S.translate(4, 0))
+    ];
+            
+    var animator = new MultiFiveBarCouplerAnimator({
+        plot: plot,
+        fiveBars: fiveBars,
+        speedRatio: .5
+        });
+})();
+</script>
+</html>
