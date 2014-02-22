@@ -26,9 +26,9 @@ canvas {
     <div id="a3_input"></div>
     <div id="a4_input"></div>
     <div id="a5_input"></div>
+    <div id="crank_distance"></div>
     <div id="theta3_input"></div>
     <div id="theta2_phase"></div>
-    <div id="crank_distance"></div>
     <div id="crank_angle"></div><br/>
     
     <textarea id="data"></textarea><br/>
@@ -54,21 +54,21 @@ Math.euclid = function (p1, p2) {
     "use strict";
 
     var fiveBar = new FiveBarCoupler({
-        P1:{x:0, y:0},
-        P5: {
-            x: 4.1402,
-            y: -2.3649
-        },
-        a1: 2,
-        a2: 4,
-        a3: 5.198,
-        a4: 1.418,
-        a5: 2.76,
-        speed1: 2,
-        speed2: 1,
-        theta2_phase: 4.4095,
-        theta3: 5.0730
-    }),
+            P1:{x:0, y:0},
+            P5: {
+                x: 4.1402,
+                y: -2.3649
+            },
+            a1: 2,
+            a2: 4,
+            a3: 5.198,
+            a4: 1.418,
+            a5: 2.76,
+            speed1: 2,
+            speed2: 1,
+            theta2_phase: 4.4095,
+            theta3: 5.0730
+        }),
 
         animator = new FiveBarCouplerAnimator({
             plot: new Plot({
@@ -232,6 +232,16 @@ Math.euclid = function (p1, p2) {
         fiveBar.P5.y = obj.P5.y;
         
         fiveBar.calcCouplerPath(1000);
+        
+        crank_distance = Math.euclid(fiveBar.P5, fiveBar.P1);
+        crank_angle = Math.atan(fiveBar.P5.y - fiveBar.P1.y, fiveBar.P5.x - fiveBar.P1.x);
+
+        [crank_distance, crank_angle, 
+         fiveBar.a1, fiveBar.a2, fiveBar.a3, fiveBar.a4, fiveBar.a5, 
+         fiveBar.theta3, fiveBar.theta2_phase].forEach(
+        function (e, i) {
+            bars[i].setPosition(e);
+        });
     };
     
     document.getElementById("dumpbtn").onclick = updateTextbox;

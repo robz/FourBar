@@ -50,7 +50,11 @@ MultiFiveBarCouplerAnimator.prototype.create = function (config) {
     // construction
     that.fbs.forEach(function (elem) {
         elem.calcCouplerPath(1000);
-        plot.drawPath(elem.cachedPath, {drawColor: "red"});
+        plot.drawPath(elem.cachedPath, {
+            drawColor: "red", 
+            pointRadius: .001,
+            lineWidth: .02
+            });
     });
     
     plot.pushBackground();
@@ -60,8 +64,8 @@ MultiFiveBarCouplerAnimator.prototype.create = function (config) {
         
         that.fbs.forEach(function (elem) {
             elem.setInputAngles(
-                ((time + elem.phase) * elem.speed1 * that.speedRatio) % (2 * Math.PI),
-                ((time + elem.phase) * elem.speed2 * that.speedRatio + elem.theta2_phase) % (2 * Math.PI)
+                (time * elem.speed1 * that.speedRatio) % (2 * Math.PI),
+                (time * elem.speed2 * that.speedRatio + elem.theta2_phase) % (2 * Math.PI)
             );
         });
 

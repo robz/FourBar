@@ -64,7 +64,7 @@ FiveBarCouplerAnimator.prototype.create = function (config) {
 
         plot.restoreToBackground();
         draw();
-        plot.drawPath(that.fb.cachedPath, {drawColor: "red"});
+        plot.drawPath(that.fb.cachedPath, {drawColor: "red", pointRadius: .01});
         
         if (that.goalPath) {
             plot.drawPath(that.goalPath, {drawColor: "black"});
