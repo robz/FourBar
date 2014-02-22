@@ -31,25 +31,36 @@ Math.euclid = function (p1, p2) {
 
     var plot = new Plot({
             container: "container",
-            pixelWidth: 700,
-            pixelHeight: 500,
-            minX: -1,
-            maxX: 6,
-            minY: -2,
-            maxY: 3,
+            pixelWidth: 1200,
+            pixelHeight: 750,
+            minX: -.5,
+            maxX: 11.5,
+            minY: -4,
+            maxY: 3.5,
             pointRadius: 0.02,
             lineWidth: 0.01,
             drawColor: "black",
             backgroundColor: "lightGray"
-            });
+            }),
     
-    var fiveBars = [
-        new FiveBarCoupler(alphabet.A),
-        new FiveBarCoupler(alphabet.B.translate(1, 0)),
-        new FiveBarCoupler(alphabet.Q.translate(2, 0)),
-        new FiveBarCoupler(alphabet.R.translate(3, 0)),
-        new FiveBarCoupler(alphabet.S.translate(4, 0))
-    ];
+        PADDING = .5,
+        MAXX = 11,
+    
+        fiveBars = [],
+        sumX = 0,
+        sumY = 0;
+    
+    Object.keys(alphabet).forEach(function (e) {
+        if (sumX + alphabet[e].width + PADDING > MAXX) {
+            sumX = 0;
+            sumY -= 1 + PADDING;
+        }
+        
+        fiveBars.push(new FiveBarCoupler(alphabet[e].translate(sumX, sumY)));
+        sumX += alphabet[e].width + PADDING;
+        
+        console.log(e, sumX);
+    });
             
     var animator = new MultiFiveBarCouplerAnimator({
         plot: plot,
